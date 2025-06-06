@@ -32,12 +32,17 @@ class _ExpenseListScreenState extends ConsumerState<ExpenseListScreen> {
   // Estado
   List<Expense> _filteredExpenses = [];
   bool _showFilters = false;
-  bool _isInitialLoading = true;
+  bool _hasLoadedInitialData = false;
 
   @override
   void initState() {
     super.initState();
-    _loadData();
+    print('📋 ExpenseListScreen: initState called');
+
+    // Cargar datos inmediatamente después de construir el widget
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _loadInitialData();
+    });
   }
 
   @override
@@ -46,33 +51,36 @@ class _ExpenseListScreenState extends ConsumerState<ExpenseListScreen> {
     super.dispose();
   }
 
-  Future<void> _loadData() async {
-    setState(() {
-      _isInitialLoading = true;
-    });
+  Future<void> _loadInitialData() async {
+    if (_hasLoadedInitialData) return;
+
+    print('📋 ExpenseListScreen: Iniciando carga inicial de datos...');
 
     try {
-      print('📋 ExpenseList: Iniciando carga de datos...');
+      // Mostrar que estamos cargando
+      setState(() {
+        _hasLoadedInitialData = true;
+      });
 
-      // Cargar datos en paralelo
-      await Future.wait([
-        ref.read(expenseProvider.notifier).loadExpenses(),
-        ref.read(categoryProvider.notifier).loadCategories(),
-      ]);
+      // Cargar datos de forma secuencial para evitar conflictos
+      await ref.read(categoryProvider.notifier).loadCategories();
+      await ref.read(expenseProvider.notifier).loadExpenses();
 
-      // Esperar un frame para asegurar que los providers se actualicen
-      await Future.delayed(const Duration(milliseconds: 100));
-
-      print('📋 ExpenseList: Datos cargados, aplicando filtros...');
+      print('📋 ExpenseListScreen: Datos cargados, aplicando filtros...');
 
       // Aplicar filtros después de cargar
-      _applyFilters();
+      if (mounted) {
+        _applyFilters();
+      }
+
+      print('📋 ExpenseListScreen: Carga inicial completada');
     } catch (e) {
-      print('❌ ExpenseList: Error cargando datos: $e');
-    } finally {
+      print('❌ ExpenseListScreen: Error cargando datos iniciales: $e');
+
+      // En caso de error, permitir reintento
       if (mounted) {
         setState(() {
-          _isInitialLoading = false;
+          _hasLoadedInitialData = false;
         });
       }
     }
@@ -167,16 +175,14 @@ class _ExpenseListScreenState extends ConsumerState<ExpenseListScreen> {
     }
   }
 
-  // Escuchar cambios en los providers y actualizar automáticamente
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    // Aplicar filtros cuando cambien los datos
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!_isInitialLoading) {
-        _applyFilters();
-      }
+  Future<void> _reloadData() async {
+    print('🔄 ExpenseListScreen: Recargando datos...');
+
+    setState(() {
+      _hasLoadedInitialData = false;
     });
+
+    await _loadInitialData();
   }
 
   Future<void> _selectDateRange() async {
@@ -268,7 +274,7 @@ class _ExpenseListScreenState extends ConsumerState<ExpenseListScreen> {
       if (success) {
         _showSuccessMessage('Gasto eliminado exitosamente');
         // Recargar datos después de eliminar
-        await _loadData();
+        await _reloadData();
       }
     }
   }
@@ -307,7 +313,7 @@ class _ExpenseListScreenState extends ConsumerState<ExpenseListScreen> {
         )
         .then((_) {
           // Recargar después de editar
-          _loadData();
+          _reloadData();
         });
   }
 
@@ -316,7 +322,7 @@ class _ExpenseListScreenState extends ConsumerState<ExpenseListScreen> {
         .push(MaterialPageRoute(builder: (context) => const AddExpenseScreen()))
         .then((_) {
           // Recargar después de agregar
-          _loadData();
+          _reloadData();
         });
   }
 
@@ -354,6 +360,18 @@ class _ExpenseListScreenState extends ConsumerState<ExpenseListScreen> {
   @override
   Widget build(BuildContext context) {
     final user = ref.watch(currentUserProvider);
+    final expenseState = ref.watch(expenseProvider);
+    final isLoadingData = expenseState.isLoading || !_hasLoadedInitialData;
+
+    // Escuchar cambios en los gastos y aplicar filtros automáticamente
+    ref.listen<List<Expense>>(expenseListProvider, (previous, next) {
+      if (_hasLoadedInitialData && mounted) {
+        print('📋 Gastos actualizados, reaplicando filtros...');
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          _applyFilters();
+        });
+      }
+    });
 
     return Scaffold(
       backgroundColor: Colors.grey[50],
@@ -429,8 +447,8 @@ class _ExpenseListScreenState extends ConsumerState<ExpenseListScreen> {
           // Lista de gastos
           Expanded(
             child: RefreshIndicator(
-              onRefresh: _loadData,
-              child: _buildExpensesList(user),
+              onRefresh: _reloadData,
+              child: _buildExpensesList(user, isLoadingData),
             ),
           ),
         ],
@@ -596,9 +614,9 @@ class _ExpenseListScreenState extends ConsumerState<ExpenseListScreen> {
     );
   }
 
-  Widget _buildExpensesList(user) {
+  Widget _buildExpensesList(user, bool isLoadingData) {
     // Mostrar loading durante la carga inicial
-    if (_isInitialLoading) {
+    if (isLoadingData) {
       return const LoadingWidget(message: 'Cargando gastos...');
     }
 

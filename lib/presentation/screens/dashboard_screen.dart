@@ -1,3 +1,4 @@
+import 'package:control_gastos/presentation/screens/category_management/category_management_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../aplication/providers/auth_provider.dart';
@@ -8,15 +9,6 @@ import '../widgets/loading_widget.dart';
 import 'login_screen.dart';
 import 'add_expense_screen.dart';
 import 'expense_list_screen.dart';
-import 'test_camera_screen.dart';
-import 'test_camera_screen.dart'; // Agregar esta importaciónd/flutter_riverpod.dart';
-import '../../aplication/providers/auth_provider.dart';
-import '../../aplication/providers/expense_provider.dart';
-import '../../aplication/providers/category_provider.dart';
-import '../../domain/usecases/expense_usecases.dart';
-import '../widgets/loading_widget.dart';
-import 'login_screen.dart';
-import 'add_expense_screen.dart';
 
 class DashboardScreen extends ConsumerStatefulWidget {
   const DashboardScreen({super.key});
@@ -26,26 +18,55 @@ class DashboardScreen extends ConsumerStatefulWidget {
 }
 
 class _DashboardScreenState extends ConsumerState<DashboardScreen> {
+  bool _hasLoadedInitialData = false;
+
   @override
   void initState() {
     super.initState();
-    _loadInitialData();
+    // Cargar datos inmediatamente después de construir el widget
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _loadInitialData();
+    });
   }
 
   Future<void> _loadInitialData() async {
+    if (_hasLoadedInitialData) return;
+
     try {
       print('📊 Dashboard: Iniciando carga de datos...');
 
-      // Cargar datos iniciales de forma segura
+      setState(() {
+        _hasLoadedInitialData = true;
+      });
+
+      // Cargar datos iniciales de forma segura y secuencial
+      await ref.read(categoryProvider.notifier).loadCategories();
+      await ref.read(expenseProvider.notifier).loadExpenses();
+
+      print('📊 Dashboard: Datos cargados exitosamente');
+    } catch (e) {
+      print('❌ Dashboard: Error cargando datos iniciales: $e');
+
+      // En caso de error, permitir reintento
+      setState(() {
+        _hasLoadedInitialData = false;
+      });
+    }
+  }
+
+  Future<void> _refreshData() async {
+    print('🔄 Dashboard: Refrescando datos...');
+
+    try {
+      // Recargar datos en paralelo
       await Future.wait([
         ref.read(categoryProvider.notifier).loadCategories(),
         ref.read(expenseProvider.notifier).loadExpenses(),
       ]);
 
-      print('📊 Dashboard: Datos cargados exitosamente');
+      print('✅ Dashboard: Datos refrescados');
     } catch (e) {
-      print('❌ Dashboard: Error cargando datos iniciales: $e');
-      // No lanzar el error para evitar crash
+      print('❌ Dashboard: Error refrescando datos: $e');
     }
   }
 
@@ -86,9 +107,23 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
   }
 
   void _navigateToAddExpense() {
-    Navigator.of(
-      context,
-    ).push(MaterialPageRoute(builder: (context) => const AddExpenseScreen()));
+    Navigator.of(context)
+        .push(MaterialPageRoute(builder: (context) => const AddExpenseScreen()))
+        .then((_) {
+          // Refrescar datos cuando regresemos
+          _refreshData();
+        });
+  }
+
+  void _navigateToExpenseList() {
+    Navigator.of(context)
+        .push(
+          MaterialPageRoute(builder: (context) => const ExpenseListScreen()),
+        )
+        .then((_) {
+          // Refrescar datos cuando regresemos
+          _refreshData();
+        });
   }
 
   @override
@@ -99,6 +134,19 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     if (user == null) {
       return const Scaffold(
         body: LoadingWidget(message: 'Cargando datos del usuario...'),
+      );
+    }
+
+    // Mostrar loading si aún no se han cargado los datos iniciales
+    if (!_hasLoadedInitialData) {
+      return Scaffold(
+        backgroundColor: Colors.grey[50],
+        appBar: AppBar(
+          backgroundColor: const Color(0xFF2196F3),
+          foregroundColor: Colors.white,
+          title: Text('Hola, ${user.displayName}'),
+        ),
+        body: const LoadingWidget(message: 'Cargando datos...'),
       );
     }
 
@@ -126,16 +174,32 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
             icon: const Icon(Icons.notifications_outlined),
             onPressed: () {
               // TODO: Implementar notificaciones
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('Próximamente: Notificaciones'),
+                  behavior: SnackBarBehavior.floating,
+                ),
+              );
             },
           ),
           PopupMenuButton<String>(
             onSelected: (value) {
               switch (value) {
                 case 'profile':
-                  // TODO: Navegar a perfil
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Próximamente: Mi Perfil'),
+                      behavior: SnackBarBehavior.floating,
+                    ),
+                  );
                   break;
                 case 'settings':
-                  // TODO: Navegar a configuraciones
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Próximamente: Configuración'),
+                      behavior: SnackBarBehavior.floating,
+                    ),
+                  );
                   break;
                 case 'logout':
                   _handleLogout();
@@ -189,7 +253,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
         ],
       ),
       body: RefreshIndicator(
-        onRefresh: _loadInitialData,
+        onRefresh: _refreshData,
         child: SingleChildScrollView(
           physics: const AlwaysScrollableScrollPhysics(),
           padding: const EdgeInsets.all(16),
@@ -363,13 +427,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                 title: 'Lista Gastos',
                 icon: Icons.list_alt,
                 color: const Color(0xFF9C27B0),
-                onTap: () {
-                  Navigator.of(context).push(
-                    MaterialPageRoute(
-                      builder: (context) => const ExpenseListScreen(),
-                    ),
-                  );
-                },
+                onTap: _navigateToExpenseList,
               ),
             ),
           ],
@@ -383,13 +441,17 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                 icon: Icons.category,
                 color: const Color(0xFF9C27B0),
                 onTap: () {
-                  // TODO: Implementar gestión de categorías
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Próximamente: Gestión de categorías'),
-                      behavior: SnackBarBehavior.floating,
-                    ),
-                  );
+                  Navigator.of(context)
+                      .push(
+                        MaterialPageRoute(
+                          builder: (context) =>
+                              const CategoryManagementScreen(),
+                        ),
+                      )
+                      .then((_) {
+                        // Refrescar datos cuando regresemos
+                        _refreshData();
+                      });
                 },
               ),
             ),
@@ -400,7 +462,6 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                 icon: Icons.account_balance_wallet,
                 color: const Color(0xFFFF5722),
                 onTap: () {
-                  // TODO: Implementar presupuestos
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(
                       content: Text('Próximamente: Presupuestos'),
@@ -466,15 +527,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                   style: TextStyle(fontSize: 20, fontWeight: FontWeight.w600),
                 ),
                 TextButton(
-                  onPressed: () {
-                    // TODO: Ver todos los gastos
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('Próximamente: Lista completa de gastos'),
-                        behavior: SnackBarBehavior.floating,
-                      ),
-                    );
-                  },
+                  onPressed: _navigateToExpenseList,
                   child: const Text(
                     'Ver todos',
                     style: TextStyle(color: Color(0xFF2196F3)),
@@ -566,6 +619,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                             color: Color(0xFFE53935),
                           ),
                         ),
+                        onTap: _navigateToExpenseList,
                       ),
                     ),
                   ),
@@ -665,15 +719,15 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
       case 'BOB':
         return 'Bs. ${amount.toStringAsFixed(2)}';
       case 'USD':
-        return '\${amount.toStringAsFixed(2)}';
+        return '\$${amount.toStringAsFixed(2)}';
       case 'EUR':
         return '€${amount.toStringAsFixed(2)}';
       case 'ARS':
-        return '\${amount.toStringAsFixed(2)} ARS';
+        return '\$${amount.toStringAsFixed(2)} ARS';
       case 'BRL':
-        return 'R\${amount.toStringAsFixed(2)}';
+        return 'R\$${amount.toStringAsFixed(2)}';
       case 'CLP':
-        return '\${amount.toStringAsFixed(2)} CLP';
+        return '\$${amount.toStringAsFixed(2)} CLP';
       default:
         return '${amount.toStringAsFixed(2)} $currency';
     }
