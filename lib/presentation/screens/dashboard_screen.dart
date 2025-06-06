@@ -4,7 +4,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../aplication/providers/auth_provider.dart';
 import '../../aplication/providers/expense_provider.dart';
 import '../../aplication/providers/category_provider.dart';
-import '../../domain/usecases/expense_usecases.dart';
 import '../widgets/loading_widget.dart';
 import 'login_screen.dart';
 import 'add_expense_screen.dart';
@@ -26,7 +25,6 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
   @override
   void initState() {
     super.initState();
-    // Cargar datos inmediatamente después de construir el widget
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _loadInitialData();
     });
@@ -41,19 +39,12 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
       setState(() {
         _hasLoadedInitialData = true;
       });
-
-      // Cargar datos iniciales de forma segura y secuencial
       await ref.read(categoryProvider.notifier).loadCategories();
       await ref.read(expenseProvider.notifier).loadExpenses();
-      await ref
-          .read(budgetProvider.notifier)
-          .loadBudgets(); // ← AGREGAR ESTA LÍNEA
-
+      await ref.read(budgetProvider.notifier).loadBudgets();
       print('📊 Dashboard: Datos cargados exitosamente');
     } catch (e) {
       print('❌ Dashboard: Error cargando datos iniciales: $e');
-
-      // En caso de error, permitir reintento
       setState(() {
         _hasLoadedInitialData = false;
       });
@@ -64,7 +55,6 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     print('🔄 Dashboard: Refrescando datos...');
 
     try {
-      // Recargar datos en paralelo
       await Future.wait([
         ref.read(categoryProvider.notifier).loadCategories(),
         ref.read(expenseProvider.notifier).loadExpenses(),
@@ -103,9 +93,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
           ),
           TextButton(
             onPressed: () => Navigator.of(context).pop(true),
-            style: TextButton.styleFrom(
-              foregroundColor: const Color(0xFFE53935),
-            ),
+            style: TextButton.styleFrom(foregroundColor: Colors.red),
             child: const Text('Cerrar Sesión'),
           ),
         ],
@@ -117,7 +105,6 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     Navigator.of(context)
         .push(MaterialPageRoute(builder: (context) => const AddExpenseScreen()))
         .then((_) {
-          // Refrescar datos cuando regresemos
           _refreshData();
         });
   }
@@ -128,7 +115,6 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
           MaterialPageRoute(builder: (context) => const ExpenseListScreen()),
         )
         .then((_) {
-          // Refrescar datos cuando regresemos
           _refreshData();
         });
   }
@@ -144,12 +130,11 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
       );
     }
 
-    // Mostrar loading si aún no se han cargado los datos iniciales
     if (!_hasLoadedInitialData) {
       return Scaffold(
         backgroundColor: Colors.grey[50],
         appBar: AppBar(
-          backgroundColor: const Color(0xFF2196F3),
+          backgroundColor: Colors.blue,
           foregroundColor: Colors.white,
           title: Text('Hola, ${user.displayName}'),
         ),
@@ -158,9 +143,9 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     }
 
     return Scaffold(
-      backgroundColor: Colors.grey[50],
+      backgroundColor: Colors.blue.shade50,
       appBar: AppBar(
-        backgroundColor: const Color(0xFF2196F3),
+        backgroundColor: Colors.blue,
         foregroundColor: Colors.white,
         elevation: 2,
         title: Column(
@@ -180,7 +165,6 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
           IconButton(
             icon: const Icon(Icons.notifications_outlined),
             onPressed: () {
-              // TODO: Implementar notificaciones
               ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(
                   content: Text('Próximamente: Notificaciones'),
@@ -195,7 +179,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                 case 'profile':
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(
-                      content: Text('Próximamente: Mi Perfil'),
+                      content: Text('Mi Perfil'),
                       behavior: SnackBarBehavior.floating,
                     ),
                   );
@@ -203,7 +187,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                 case 'settings':
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(
-                      content: Text('Próximamente: Configuración'),
+                      content: Text('Configuración'),
                       behavior: SnackBarBehavior.floating,
                     ),
                   );
@@ -234,10 +218,10 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
               const PopupMenuItem(
                 value: 'logout',
                 child: ListTile(
-                  leading: Icon(Icons.logout, color: Color(0xFFE53935)),
+                  leading: Icon(Icons.logout, color: Colors.red),
                   title: Text(
                     'Cerrar Sesión',
-                    style: TextStyle(color: Color(0xFFE53935)),
+                    style: TextStyle(color: Colors.red),
                   ),
                   contentPadding: EdgeInsets.zero,
                 ),
@@ -246,7 +230,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
             child: Padding(
               padding: const EdgeInsets.all(8.0),
               child: CircleAvatar(
-                backgroundColor: const Color(0xFF4CAF50),
+                backgroundColor: Colors.green,
                 child: Text(
                   user.initials,
                   style: const TextStyle(
@@ -267,27 +251,20 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Resumen financiero
               _buildFinancialSummary(),
 
               const SizedBox(height: 24),
 
-              // Acciones rápidas
               _buildQuickActions(),
 
               const SizedBox(height: 24),
 
-              // Gastos recientes
               _buildRecentExpenses(),
 
               const SizedBox(height: 24),
-
-              // Estadísticas rápidas
               _buildQuickStats(),
 
               const SizedBox(height: 24),
-
-              // Alertas de presupuesto - ← AGREGAR ESTA LÍNEA Y LA SECCIÓN SIGUIENTE
               _buildBudgetAlerts(),
             ],
           ),
@@ -295,7 +272,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: _navigateToAddExpense,
-        backgroundColor: const Color(0xFF4CAF50),
+        backgroundColor: Colors.green,
         foregroundColor: Colors.white,
         child: const Icon(Icons.add),
       ),
@@ -342,8 +319,6 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                   style: TextStyle(fontSize: 20, fontWeight: FontWeight.w600),
                 ),
                 const SizedBox(height: 16),
-
-                // Primera fila - Gastos
                 Row(
                   children: [
                     Expanded(
@@ -351,14 +326,14 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                         title: 'Total Gastado',
                         amount: totals.monthTotal,
                         currency: user.currency,
-                        color: const Color(0xFFE53935),
+                        color: Colors.red,
                         icon: Icons.trending_up,
                       ),
                     ),
                     Container(
                       width: 1,
                       height: 60,
-                      color: Colors.grey[300],
+                      color: Colors.grey.shade600,
                       margin: const EdgeInsets.symmetric(horizontal: 16),
                     ),
                     Expanded(
@@ -366,14 +341,13 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                         title: 'Gastos Hoy',
                         amount: totals.todayTotal,
                         currency: user.currency,
-                        color: const Color(0xFFFF9800),
+                        color: Colors.orange,
                         icon: Icons.today,
                       ),
                     ),
                   ],
                 ),
 
-                // Segunda fila - Presupuestos (si hay)
                 if (budgetSummary.totalBudgets > 0) ...[
                   const SizedBox(height: 16),
                   Container(
@@ -440,7 +414,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
               title,
               style: TextStyle(
                 fontSize: 12,
-                color: Colors.grey[600],
+                color: Colors.grey.shade600,
                 fontWeight: FontWeight.w500,
               ),
             ),
@@ -474,7 +448,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
               child: _buildActionCard(
                 title: 'Agregar Gasto',
                 icon: Icons.add_circle_outline,
-                color: const Color(0xFF4CAF50),
+                color: Colors.green,
                 onTap: _navigateToAddExpense,
               ),
             ),
@@ -483,7 +457,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
               child: _buildActionCard(
                 title: 'Lista Gastos',
                 icon: Icons.list_alt,
-                color: const Color(0xFF9C27B0),
+                color: Colors.purple,
                 onTap: _navigateToExpenseList,
               ),
             ),
@@ -496,7 +470,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
               child: _buildActionCard(
                 title: 'Categorías',
                 icon: Icons.category,
-                color: const Color(0xFF9C27B0),
+                color: Colors.indigo,
                 onTap: () {
                   Navigator.of(context)
                       .push(
@@ -506,7 +480,6 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                         ),
                       )
                       .then((_) {
-                        // Refrescar datos cuando regresemos
                         _refreshData();
                       });
                 },
@@ -515,20 +488,17 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
             const SizedBox(width: 16),
             Expanded(
               child: _buildActionCard(
-                title:
-                    'Presupuestos', // ← CAMBIAR DE "Presupuestos" a funcional
+                title: 'Presupuestos',
                 icon: Icons.account_balance_wallet,
-                color: const Color(0xFFFF5722), // ← CAMBIAR COLOR
+                color: const Color(0xFFFF5722),
                 onTap: () {
                   Navigator.of(context)
                       .push(
                         MaterialPageRoute(
-                          builder: (context) =>
-                              const BudgetScreen(), // ← CAMBIAR A BudgetScreen
+                          builder: (context) => const BudgetScreen(),
                         ),
                       )
                       .then((_) {
-                        // Refrescar datos cuando regresemos
                         _refreshData();
                       });
                 },
@@ -803,7 +773,6 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
 
         if (alerts.isEmpty) return const SizedBox.shrink();
 
-        // Mostrar solo las 3 alertas más importantes
         final topAlerts = alerts.take(3).toList();
 
         return Column(
@@ -827,7 +796,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                     },
                     child: const Text(
                       'Ver todas',
-                      style: TextStyle(color: Color(0xFFFF5722)),
+                      style: TextStyle(color: Colors.red),
                     ),
                   ),
               ],
@@ -840,7 +809,6 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     );
   }
 
-  // 8. AGREGAR el método _buildAlertCard() al final de la clase:
   Widget _buildAlertCard(BudgetAlert alert) {
     Color alertColor;
     IconData alertIcon;
@@ -866,7 +834,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: ListTile(
         leading: CircleAvatar(
-          backgroundColor: alertColor.withOpacity(0.1),
+          backgroundColor: alertColor,
           child: Icon(alertIcon, color: alertColor, size: 20),
         ),
         title: Text(

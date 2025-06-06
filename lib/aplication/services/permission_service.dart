@@ -37,12 +37,10 @@ class PermissionService {
   // Solicitar permisos de almacenamiento
   static Future<bool> requestStoragePermission() async {
     if (Platform.isAndroid) {
-      // Para Android 13+ (API 33+)
       if (await _isAndroid13OrHigher()) {
         final status = await Permission.photos.request();
         return status.isGranted;
       } else {
-        // Para Android 12 y anteriores
         final status = await Permission.storage.request();
         return status.isGranted;
       }
@@ -143,7 +141,7 @@ class PermissionService {
     if (Platform.isAndroid) {
       // Verificar si es Android 13+ (API 33+)
       // Esta es una aproximación, en producción deberías usar device_info_plus
-      return false; // Por simplicidad, asumimos versiones anteriores
+      return false;
     }
     return false;
   }

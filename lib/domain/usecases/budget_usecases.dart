@@ -3,7 +3,6 @@ import '../entities/expense.dart';
 import '../entities/category.dart';
 
 class BudgetUsecases {
-  // Usecase: Validar creación de presupuesto
   BudgetValidationResult validateBudgetCreation({
     required int categoryId,
     required int month,

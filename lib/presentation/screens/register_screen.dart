@@ -2,7 +2,6 @@ import 'package:control_gastos/presentation/screens/dashboard_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../aplication/providers/auth_provider.dart';
-import '../theme/app_theme.dart';
 import '../widgets/custtom_button.dart';
 import '../widgets/custom_text_field.dart';
 import 'register_screen.dart';
@@ -65,7 +64,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(message),
-        backgroundColor: AppTheme.errorColor,
+        backgroundColor: Colors.red,
         behavior: SnackBarBehavior.floating,
         action: SnackBarAction(
           label: 'Cerrar',
@@ -101,7 +100,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(
         content: Text('¡Cuenta creada exitosamente! Bienvenido'),
-        backgroundColor: AppTheme.successColor,
+        backgroundColor: Colors.green,
         behavior: SnackBarBehavior.floating,
         duration: Duration(seconds: 3),
       ),
@@ -131,13 +130,13 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
         backgroundColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: AppTheme.textPrimary),
+          icon: const Icon(Icons.arrow_back, color: Colors.black),
           onPressed: _navigateToLogin,
         ),
       ),
       body: SafeArea(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.all(AppSpacing.lg),
+          padding: const EdgeInsets.all(24),
           child: Form(
             key: _formKey,
             child: Column(
@@ -146,37 +145,37 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                 // Header
                 _buildHeader(),
 
-                const SizedBox(height: AppSpacing.xl),
+                const SizedBox(height: 32),
 
                 // Formulario de registro
                 _buildRegisterForm(),
 
-                const SizedBox(height: AppSpacing.lg),
+                const SizedBox(height: 24),
 
                 // Selector de moneda
                 _buildCurrencySelector(),
 
-                const SizedBox(height: AppSpacing.lg),
+                const SizedBox(height: 24),
 
                 // Checkbox recordar sesión
                 _buildRememberSession(),
 
-                const SizedBox(height: AppSpacing.xl),
+                const SizedBox(height: 32),
 
                 // Botón de registro
                 _buildRegisterButton(authState),
 
-                const SizedBox(height: AppSpacing.lg),
+                const SizedBox(height: 24),
 
                 // Divisor
                 _buildDivider(),
 
-                const SizedBox(height: AppSpacing.lg),
+                const SizedBox(height: 24),
 
                 // Link para login
                 _buildLoginLink(),
 
-                const SizedBox(height: AppSpacing.lg),
+                const SizedBox(height: 24),
               ],
             ),
           ),
@@ -193,11 +192,11 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
           width: 80,
           height: 80,
           decoration: BoxDecoration(
-            color: AppTheme.secondaryColor,
-            borderRadius: BorderRadius.circular(AppBorderRadius.xl),
+            color: Colors.green,
+            borderRadius: BorderRadius.circular(32),
             boxShadow: [
               BoxShadow(
-                color: AppTheme.secondaryColor.withOpacity(0.3),
+                color: Colors.green,
                 blurRadius: 20,
                 offset: const Offset(0, 8),
               ),
@@ -206,16 +205,20 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
           child: const Icon(Icons.person_add, size: 40, color: Colors.white),
         ),
 
-        const SizedBox(height: AppSpacing.lg),
+        const SizedBox(height: 24),
 
         // Título
         const Text(
           'Crear Cuenta',
-          style: AppTextStyles.h1,
+          style: TextStyle(
+            fontSize: 32,
+            fontWeight: FontWeight.bold,
+            color: Colors.black,
+          ),
           textAlign: TextAlign.center,
         ),
 
-        const SizedBox(height: AppSpacing.sm),
+        const SizedBox(height: 8),
 
         // Subtítulo
         Text(
@@ -255,7 +258,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
           },
         ),
 
-        const SizedBox(height: AppSpacing.md),
+        const SizedBox(height: 16),
 
         // Campo de email
         EmailTextField(
@@ -263,7 +266,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
           hintText: 'ejemplo@correo.com',
         ),
 
-        const SizedBox(height: AppSpacing.md),
+        const SizedBox(height: 16),
 
         // Campo de contraseña
         CustomTextField(
@@ -301,7 +304,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
           helperText: 'Mínimo 6 caracteres, incluye letras y números',
         ),
 
-        const SizedBox(height: AppSpacing.md),
+        const SizedBox(height: 16),
 
         // Campo de confirmar contraseña
         CustomTextField(
@@ -345,16 +348,16 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
           style: TextStyle(
             fontSize: 14,
             fontWeight: FontWeight.w500,
-            color: AppTheme.textPrimary,
+            color: Colors.black,
           ),
         ),
-        const SizedBox(height: AppSpacing.xs),
+        const SizedBox(height: 4),
         Container(
           width: double.infinity,
-          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
+          padding: const EdgeInsets.symmetric(horizontal: 16),
           decoration: BoxDecoration(
             color: Colors.grey[50],
-            borderRadius: BorderRadius.circular(AppBorderRadius.md),
+            borderRadius: BorderRadius.circular(8),
             border: Border.all(color: Colors.grey[300]!),
           ),
           child: DropdownButtonHideUnderline(
@@ -362,7 +365,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
               value: _selectedCurrency,
               isExpanded: true,
               icon: const Icon(Icons.keyboard_arrow_down),
-              style: const TextStyle(fontSize: 16, color: AppTheme.textPrimary),
+              style: const TextStyle(fontSize: 16, color: Colors.black),
               onChanged: (String? newValue) {
                 if (newValue != null) {
                   setState(() {
@@ -380,10 +383,10 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                         style: const TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.bold,
-                          color: AppTheme.primaryColor,
+                          color: Colors.blue,
                         ),
                       ),
-                      const SizedBox(width: AppSpacing.sm),
+                      const SizedBox(width: 8),
                       Expanded(
                         child: Text(
                           currency['name']!,
@@ -397,7 +400,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
             ),
           ),
         ),
-        const SizedBox(height: AppSpacing.xs),
+        const SizedBox(height: 4),
         Text(
           'Esta será la moneda por defecto para tus gastos',
           style: TextStyle(fontSize: 12, color: Colors.grey[600]),
@@ -416,7 +419,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
               _rememberSession = value ?? false;
             });
           },
-          activeColor: AppTheme.primaryColor,
+          activeColor: Colors.blue,
         ),
         Expanded(
           child: GestureDetector(
@@ -441,7 +444,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
       onPressed: authState.isLoading ? null : _handleRegister,
       isLoading: authState.isLoading,
       icon: Icons.person_add,
-      backgroundColor: AppTheme.secondaryColor,
+      backgroundColor: Colors.green,
     );
   }
 
@@ -450,7 +453,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
       children: [
         Expanded(child: Divider(color: Colors.grey[300], thickness: 1)),
         Padding(
-          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
+          padding: const EdgeInsets.symmetric(horizontal: 16),
           child: Text(
             'o',
             style: TextStyle(color: Colors.grey[600], fontSize: 14),
@@ -475,7 +478,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
             'Inicia sesión',
             style: TextStyle(
               fontSize: 14,
-              color: AppTheme.primaryColor,
+              color: Colors.blue,
               fontWeight: FontWeight.w600,
             ),
           ),

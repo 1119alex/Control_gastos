@@ -27,11 +27,7 @@ class ExpenseModel {
     this.updatedAt,
   });
 
-  // =============================================
-  // CONVERSIÓN DESDE/HACIA ENTITY (DOMAIN)
-  // =============================================
-
-  // Convertir de Entity (Domain) a Model (Data)
+  // Convertir de Entity a Model
   factory ExpenseModel.fromEntity(Expense entity) {
     return ExpenseModel(
       id: entity.id,
@@ -47,7 +43,7 @@ class ExpenseModel {
     );
   }
 
-  // Convertir de Model (Data) a Entity (Domain)
+  // Convertir de Modela Entity
   Expense toEntity() {
     return Expense(
       id: id,
@@ -63,11 +59,7 @@ class ExpenseModel {
     );
   }
 
-  // =============================================
-  // CONVERSIÓN DESDE/HACIA DATABASE (SQLITE)
-  // =============================================
-
-  // Convertir de Map (SQLite) a ExpenseModel
+  // Convertir de SQLite a ExpenseModel
   factory ExpenseModel.fromMap(Map<String, dynamic> map) {
     return ExpenseModel(
       id: map['id']?.toInt(),
@@ -86,7 +78,7 @@ class ExpenseModel {
     );
   }
 
-  // Convertir de ExpenseModel a Map (para SQLite)
+  // Convertir de ExpenseModel a SQLite
   Map<String, dynamic> toMap() {
     return {
       'id': id,
@@ -94,9 +86,7 @@ class ExpenseModel {
       'description': description.trim(),
       'category_id': categoryId,
       'user_id': userId,
-      'expense_date': expenseDate.toIso8601String().split(
-        'T',
-      )[0], // Solo fecha YYYY-MM-DD
+      'expense_date': expenseDate.toIso8601String().split('T')[0],
       'location': location?.trim(),
       'establishment': establishment?.trim(),
       'notes': notes?.trim(),
@@ -104,10 +94,6 @@ class ExpenseModel {
       'updated_at': updatedAt?.toIso8601String(),
     };
   }
-
-  // =============================================
-  // MÉTODOS DE UTILIDAD
-  // =============================================
 
   // Crear una copia con campos modificados
   ExpenseModel copyWith({

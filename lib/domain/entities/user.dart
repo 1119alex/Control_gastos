@@ -55,7 +55,7 @@ class User {
   // Regla de negocio: ¿Es un usuario nuevo?
   bool get isNewUser {
     final daysSinceCreation = DateTime.now().difference(createdAt).inDays;
-    return daysSinceCreation <= 7; // Nuevo si tiene menos de 7 días
+    return daysSinceCreation <= 7;
   }
 
   // Crear copia con cambios

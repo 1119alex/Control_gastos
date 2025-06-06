@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../aplication/providers/auth_provider.dart';
-import '../theme/app_theme.dart';
 import 'login_screen.dart';
 import 'dashboard_screen.dart';
 
@@ -19,9 +18,8 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
   late Animation<double> _scaleAnimation;
   bool _hasNavigated = false;
 
-  // Colores directos - PUEDES CAMBIAR ESTOS
-  static const Color primaryBlue = Color(0xFF2196F3);
-  static const Color errorRed = Color(0xFFE53935);
+  static const Color primaryBlue = Colors.blue;
+  static const Color errorRed = Colors.red;
 
   @override
   void initState() {
@@ -159,7 +157,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
     final authState = ref.watch(authProvider);
 
     return Scaffold(
-      backgroundColor: primaryBlue, // ← CAMBIA ESTE COLOR
+      backgroundColor: Colors.blue,
       body: SafeArea(
         child: Column(
           children: [
@@ -175,7 +173,6 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
                         child: Column(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            // Logo/Icono de la app
                             Container(
                               width: 120,
                               height: 120,
@@ -184,7 +181,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
                                 borderRadius: BorderRadius.circular(24),
                                 boxShadow: [
                                   BoxShadow(
-                                    color: Colors.black.withOpacity(0.1),
+                                    color: Colors.black,
                                     blurRadius: 20,
                                     offset: const Offset(0, 10),
                                   ),
@@ -193,13 +190,12 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
                               child: const Icon(
                                 Icons.account_balance_wallet,
                                 size: 60,
-                                color: primaryBlue, // ← PUEDES CAMBIAR ESTE
+                                color: primaryBlue,
                               ),
                             ),
 
                             const SizedBox(height: 32),
 
-                            // Nombre de la app
                             const Text(
                               'Gestor de Gastos',
                               style: TextStyle(
@@ -211,13 +207,11 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
                             ),
 
                             const SizedBox(height: 8),
-
-                            // Subtítulo
                             Text(
                               'Controla tus finanzas personales',
                               style: TextStyle(
                                 fontSize: 16,
-                                color: Colors.white.withOpacity(0.9),
+                                color: Colors.white,
                                 fontWeight: FontWeight.w400,
                               ),
                             ),
@@ -229,8 +223,6 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
                 ),
               ),
             ),
-
-            // Indicador de estado en la parte inferior
             Padding(
               padding: const EdgeInsets.all(24),
               child: Column(
@@ -247,32 +239,19 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
                     const SizedBox(height: 16),
                     Text(
                       'Verificando sesión...',
-                      style: TextStyle(
-                        color: Colors.white.withOpacity(0.8),
-                        fontSize: 14,
-                      ),
+                      style: TextStyle(color: Colors.white, fontSize: 14),
                     ),
                   ] else if (authState.hasError) ...[
-                    Icon(
-                      Icons.error_outline,
-                      color: Colors.white.withOpacity(0.8),
-                      size: 24,
-                    ),
+                    Icon(Icons.error_outline, color: Colors.white, size: 24),
                     const SizedBox(height: 8),
                     Text(
                       'Error al verificar sesión',
-                      style: TextStyle(
-                        color: Colors.white.withOpacity(0.8),
-                        fontSize: 14,
-                      ),
+                      style: TextStyle(color: Colors.white, fontSize: 14),
                     ),
                   ] else ...[
                     Text(
                       'Iniciando aplicación...',
-                      style: TextStyle(
-                        color: Colors.white.withOpacity(0.8),
-                        fontSize: 14,
-                      ),
+                      style: TextStyle(color: Colors.white, fontSize: 14),
                     ),
                   ],
                 ],

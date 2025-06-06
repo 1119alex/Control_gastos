@@ -1,7 +1,6 @@
 import 'package:shared_preferences/shared_preferences.dart';
 
 class StorageService {
-  // Claves para SharedPreferences
   static const String _keyUserId = 'user_id';
   static const String _keyUserEmail = 'user_email';
   static const String _keyUserName = 'user_name';
@@ -13,10 +12,7 @@ class StorageService {
   static const String _keyThemeMode = 'theme_mode';
   static const String _keyLanguage = 'language';
 
-  // =============================================
   // MÉTODOS DE SESIÓN DE USUARIO
-  // =============================================
-
   // Guardar sesión del usuario
   Future<void> saveUserSession({
     required int userId,
@@ -55,7 +51,6 @@ class StorageService {
       bool rememberSession = prefs.getBool(_keyRememberSession) ?? false;
 
       if (isLoggedIn && rememberSession) {
-        // Verificar si la sesión no es muy antigua (30 días)
         String? loginTimestamp = prefs.getString(_keyLoginTimestamp);
         if (loginTimestamp != null) {
           DateTime loginTime = DateTime.parse(loginTimestamp);
@@ -171,10 +166,7 @@ class StorageService {
     }
   }
 
-  // =============================================
   // CONFIGURACIONES DE LA APP
-  // =============================================
-
   // Verificar si es la primera vez que se abre la app
   Future<bool> isFirstLaunch() async {
     try {
@@ -241,10 +233,7 @@ class StorageService {
     }
   }
 
-  // =============================================
   // MÉTODOS DE UTILIDAD
-  // =============================================
-
   // Obtener todas las preferencias (para debugging)
   Future<Map<String, dynamic>> getAllPreferences() async {
     try {
@@ -316,7 +305,6 @@ class StorageService {
   }
 }
 
-// Clase para datos de sesión de usuario
 class UserSessionData {
   final int userId;
   final String email;

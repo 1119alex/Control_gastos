@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import '../theme/app_theme.dart';
 
 class CustomTextField extends StatelessWidget {
   final TextEditingController? controller;
@@ -63,10 +62,10 @@ class CustomTextField extends StatelessWidget {
             style: const TextStyle(
               fontSize: 14,
               fontWeight: FontWeight.w500,
-              color: AppTheme.textPrimary,
+              color: Colors.black,
             ),
           ),
-          const SizedBox(height: AppSpacing.xs),
+          const SizedBox(height: 4),
         ],
         TextFormField(
           controller: controller,
@@ -84,7 +83,7 @@ class CustomTextField extends StatelessWidget {
           inputFormatters: inputFormatters,
           focusNode: focusNode,
           textCapitalization: textCapitalization,
-          style: const TextStyle(fontSize: 16, color: AppTheme.textPrimary),
+          style: const TextStyle(fontSize: 16, color: Colors.black),
           decoration: InputDecoration(
             hintText: hintText,
             helperText: helperText,
@@ -95,41 +94,32 @@ class CustomTextField extends StatelessWidget {
             filled: true,
             fillColor: fillColor ?? Colors.grey[50],
             border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(AppBorderRadius.md),
+              borderRadius: BorderRadius.circular(8),
               borderSide: BorderSide(color: Colors.grey[300]!),
             ),
             enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(AppBorderRadius.md),
+              borderRadius: BorderRadius.circular(8),
               borderSide: BorderSide(color: Colors.grey[300]!),
             ),
             focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(AppBorderRadius.md),
-              borderSide: const BorderSide(
-                color: AppTheme.primaryColor,
-                width: 2,
-              ),
+              borderRadius: BorderRadius.circular(8),
+              borderSide: const BorderSide(color: Colors.blue, width: 2),
             ),
             errorBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(AppBorderRadius.md),
-              borderSide: const BorderSide(color: AppTheme.errorColor),
+              borderRadius: BorderRadius.circular(8),
+              borderSide: const BorderSide(color: Colors.red),
             ),
             focusedErrorBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(AppBorderRadius.md),
-              borderSide: const BorderSide(
-                color: AppTheme.errorColor,
-                width: 2,
-              ),
+              borderRadius: BorderRadius.circular(8),
+              borderSide: const BorderSide(color: Colors.red, width: 2),
             ),
             disabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(AppBorderRadius.md),
+              borderRadius: BorderRadius.circular(8),
               borderSide: BorderSide(color: Colors.grey[200]!),
             ),
             contentPadding:
                 contentPadding ??
-                const EdgeInsets.symmetric(
-                  horizontal: AppSpacing.md,
-                  vertical: AppSpacing.md,
-                ),
+                const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
             hintStyle: TextStyle(color: Colors.grey[500], fontSize: 16),
             helperStyle: TextStyle(color: Colors.grey[600], fontSize: 12),
             counterStyle: TextStyle(color: Colors.grey[600], fontSize: 12),
@@ -139,8 +129,6 @@ class CustomTextField extends StatelessWidget {
     );
   }
 }
-
-// Variaciones específicas del CustomTextField
 
 class EmailTextField extends StatelessWidget {
   final TextEditingController? controller;

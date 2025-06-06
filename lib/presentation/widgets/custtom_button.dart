@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import '../theme/app_theme.dart';
 
 class CustomButton extends StatelessWidget {
   final String text;
@@ -31,10 +30,9 @@ class CustomButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final effectiveBackgroundColor = backgroundColor ?? AppTheme.primaryColor;
+    final effectiveBackgroundColor = backgroundColor ?? Colors.blue;
     final effectiveTextColor = textColor ?? Colors.white;
-    final effectiveBorderRadius =
-        borderRadius ?? BorderRadius.circular(AppBorderRadius.md);
+    final effectiveBorderRadius = borderRadius ?? BorderRadius.circular(8);
 
     if (isOutlined) {
       return _buildOutlinedButton(
@@ -70,8 +68,7 @@ class CustomButton extends StatelessWidget {
           disabledBackgroundColor: Colors.grey[300],
           disabledForegroundColor: Colors.grey[600],
           elevation: isLoading ? 0 : 2,
-          padding:
-              padding ?? const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
+          padding: padding ?? const EdgeInsets.symmetric(horizontal: 12),
           shape: RoundedRectangleBorder(borderRadius: radius),
           textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
         ),
@@ -98,8 +95,7 @@ class CustomButton extends StatelessWidget {
             color: isLoading ? Colors.grey[300]! : borderColor,
             width: 1.5,
           ),
-          padding:
-              padding ?? const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
+          padding: padding ?? const EdgeInsets.symmetric(horizontal: 12),
           shape: RoundedRectangleBorder(borderRadius: radius),
           textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
         ),
@@ -116,7 +112,7 @@ class CustomButton extends StatelessWidget {
         child: CircularProgressIndicator(
           strokeWidth: 2,
           valueColor: AlwaysStoppedAnimation<Color>(
-            isOutlined ? AppTheme.primaryColor : Colors.white,
+            isOutlined ? Colors.blue : Colors.white,
           ),
         ),
       );
@@ -126,11 +122,7 @@ class CustomButton extends StatelessWidget {
       return Row(
         mainAxisAlignment: MainAxisAlignment.center,
         mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, size: 20),
-          const SizedBox(width: AppSpacing.sm),
-          Text(text),
-        ],
+        children: [Icon(icon, size: 20), const SizedBox(width: 4), Text(text)],
       );
     }
 
@@ -164,7 +156,7 @@ class PrimaryButton extends StatelessWidget {
       isLoading: isLoading,
       icon: icon,
       width: width,
-      backgroundColor: AppTheme.primaryColor,
+      backgroundColor: Colors.blue,
       textColor: Colors.white,
     );
   }
@@ -194,7 +186,7 @@ class SecondaryButton extends StatelessWidget {
       isLoading: isLoading,
       icon: icon,
       width: width,
-      backgroundColor: AppTheme.secondaryColor,
+      backgroundColor: Colors.green,
       textColor: Colors.white,
     );
   }
@@ -225,8 +217,8 @@ class OutlinedPrimaryButton extends StatelessWidget {
       icon: icon,
       width: width,
       isOutlined: true,
-      backgroundColor: AppTheme.primaryColor,
-      textColor: AppTheme.primaryColor,
+      backgroundColor: Colors.blue,
+      textColor: Colors.blue,
     );
   }
 }
@@ -255,7 +247,7 @@ class DangerButton extends StatelessWidget {
       isLoading: isLoading,
       icon: icon,
       width: width,
-      backgroundColor: AppTheme.errorColor,
+      backgroundColor: Colors.red,
       textColor: Colors.white,
     );
   }
@@ -285,7 +277,7 @@ class SuccessButton extends StatelessWidget {
       isLoading: isLoading,
       icon: icon,
       width: width,
-      backgroundColor: AppTheme.successColor,
+      backgroundColor: Colors.green,
       textColor: Colors.white,
     );
   }

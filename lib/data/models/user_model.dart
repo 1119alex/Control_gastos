@@ -21,11 +21,7 @@ class UserModel {
     this.updatedAt,
   });
 
-  // =============================================
-  // CONVERSIÓN DESDE/HACIA ENTITY (DOMAIN)
-  // =============================================
-
-  // Convertir de Entity (Domain) a Model (Data)
+  // Convertir de Entity (a Model
   factory UserModel.fromEntity(User entity, String passwordHash) {
     return UserModel(
       id: entity.id,
@@ -38,7 +34,7 @@ class UserModel {
     );
   }
 
-  // Convertir de Model (Data) a Entity (Domain)
+  // Convertir de Model  a Entity
   User toEntity() {
     return User(
       id: id,
@@ -50,11 +46,7 @@ class UserModel {
     );
   }
 
-  // =============================================
-  // CONVERSIÓN DESDE/HACIA DATABASE (SQLITE)
-  // =============================================
-
-  // Convertir de Map (SQLite) a UserModel
+  // Convertir de SQLite a UserModel
   factory UserModel.fromMap(Map<String, dynamic> map) {
     return UserModel(
       id: map['id']?.toInt(),
@@ -70,7 +62,7 @@ class UserModel {
     );
   }
 
-  // Convertir de UserModel a Map (para SQLite)
+  // Convertir de UserModel a  SQLite
   Map<String, dynamic> toMap() {
     return {
       'id': id,
@@ -83,10 +75,6 @@ class UserModel {
       'updated_at': updatedAt?.toIso8601String(),
     };
   }
-
-  // =============================================
-  // MÉTODOS DE UTILIDAD
-  // =============================================
 
   // Crear una copia con campos modificados
   UserModel copyWith({
@@ -119,7 +107,7 @@ class UserModel {
         currency.isNotEmpty;
   }
 
-  // Obtener datos seguros (sin password hash)
+  // Obtener datos seguros
   Map<String, dynamic> toSafeMap() {
     return {
       'id': id,
@@ -132,7 +120,6 @@ class UserModel {
     };
   }
 
-  // Para debugging y logs (sin datos sensibles)
   @override
   String toString() {
     return 'UserModel(id: $id, email: $email, name: $name, currency: $currency, isActive: $isActive)';

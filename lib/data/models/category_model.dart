@@ -23,11 +23,7 @@ class CategoryModel {
     this.updatedAt,
   });
 
-  // =============================================
-  // CONVERSIÓN DESDE/HACIA ENTITY (DOMAIN)
-  // =============================================
-
-  // Convertir de Entity (Domain) a Model (Data)
+  // Convertir de Entity  a Model
   factory CategoryModel.fromEntity(Category entity) {
     return CategoryModel(
       id: entity.id,
@@ -41,7 +37,7 @@ class CategoryModel {
     );
   }
 
-  // Convertir de Model (Data) a Entity (Domain)
+  // Convertir de Model a Entity
   Category toEntity() {
     return Category(
       id: id,
@@ -55,11 +51,7 @@ class CategoryModel {
     );
   }
 
-  // =============================================
-  // CONVERSIÓN DESDE/HACIA DATABASE (SQLITE)
-  // =============================================
-
-  // Convertir de Map (SQLite) a CategoryModel
+  // Convertir de SQLite a CategoryModel
   factory CategoryModel.fromMap(Map<String, dynamic> map) {
     return CategoryModel(
       id: map['id']?.toInt(),
@@ -76,7 +68,7 @@ class CategoryModel {
     );
   }
 
-  // Convertir de CategoryModel a Map (para SQLite)
+  // Convertir de CategoryModel a SQLite
   Map<String, dynamic> toMap() {
     return {
       'id': id,
@@ -90,10 +82,6 @@ class CategoryModel {
       'updated_at': updatedAt?.toIso8601String(),
     };
   }
-
-  // =============================================
-  // MÉTODOS DE UTILIDAD
-  // =============================================
 
   // Crear una copia con campos modificados
   CategoryModel copyWith({
@@ -241,7 +229,7 @@ class CategoryModel {
     };
   }
 
-  // Desactivar categoría (soft delete)
+  // Desactivar categoría
   CategoryModel deactivate() {
     return copyWith(isActive: false, updatedAt: DateTime.now());
   }

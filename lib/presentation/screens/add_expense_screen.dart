@@ -202,8 +202,8 @@ class _AddExpenseScreenState extends ConsumerState<AddExpenseScreen> {
     // Simulación de datos extraídos (implementar OCR real después)
     // if (mounted) {
     //   setState(() {
-    //     _amountController.text = '15.50'; // Ejemplo
-    //     _establishmentController.text = 'Supermercado ABC'; // Ejemplo
+    //     _amountController.text = '15.50';
+    //     _establishmentController.text = 'Supermercado ABC';
     //   });
     // }
   }

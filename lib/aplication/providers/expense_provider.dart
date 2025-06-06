@@ -1,13 +1,11 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../data/models/expense_model.dart';
-import '../../data/models/category_model.dart';
 import '../../data/services/database_services.dart';
 import '../../domain/entities/expense.dart';
 import '../../domain/usecases/expense_usecases.dart';
 import 'auth_provider.dart';
 import 'category_provider.dart';
 
-// Estado de gastos
 class ExpenseState {
   final List<Expense> expenses;
   final bool isLoading;
@@ -40,7 +38,6 @@ class ExpenseState {
   int get expenseCount => expenses.length;
 }
 
-// StateNotifier para manejar gastos
 class ExpenseNotifier extends StateNotifier<ExpenseState> {
   final DatabaseService _databaseService;
   final ExpenseUsecases _expenseUsecases;

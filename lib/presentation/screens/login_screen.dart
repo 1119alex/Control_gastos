@@ -1,10 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../aplication/providers/auth_provider.dart';
-import '../theme/app_theme.dart';
 import '../widgets/custtom_button.dart';
 import '../widgets/custom_text_field.dart';
-import '../widgets/loading_widget.dart';
 import 'register_screen.dart';
 import 'dashboard_screen.dart';
 
@@ -51,7 +49,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(message),
-        backgroundColor: AppTheme.errorColor,
+        backgroundColor: Colors.red,
         behavior: SnackBarBehavior.floating,
         action: SnackBarAction(
           label: 'Cerrar',
@@ -85,7 +83,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(
         content: Text('¡Bienvenido!'),
-        backgroundColor: AppTheme.successColor,
+        backgroundColor: Colors.green,
         behavior: SnackBarBehavior.floating,
         duration: Duration(seconds: 2),
       ),
@@ -113,43 +111,43 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       backgroundColor: Colors.white,
       body: SafeArea(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.all(AppSpacing.lg),
+          padding: const EdgeInsets.all(24),
           child: Form(
             key: _formKey,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                const SizedBox(height: AppSpacing.xxl),
+                const SizedBox(height: 48),
 
                 // Logo y título
                 _buildHeader(),
 
-                const SizedBox(height: AppSpacing.xxl),
+                const SizedBox(height: 48),
 
                 // Formulario de login
                 _buildLoginForm(),
 
-                const SizedBox(height: AppSpacing.lg),
+                const SizedBox(height: 24),
 
                 // Checkbox recordar sesión
                 _buildRememberSession(),
 
-                const SizedBox(height: AppSpacing.xl),
+                const SizedBox(height: 32),
 
                 // Botón de login
                 _buildLoginButton(authState),
 
-                const SizedBox(height: AppSpacing.lg),
+                const SizedBox(height: 24),
 
                 // Divisor
                 _buildDivider(),
 
-                const SizedBox(height: AppSpacing.lg),
+                const SizedBox(height: 24),
 
                 // Link para registro
                 _buildRegisterLink(),
 
-                const SizedBox(height: AppSpacing.lg),
+                const SizedBox(height: 24),
               ],
             ),
           ),
@@ -166,11 +164,11 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
           width: 80,
           height: 80,
           decoration: BoxDecoration(
-            color: AppTheme.primaryColor,
-            borderRadius: BorderRadius.circular(AppBorderRadius.xl),
+            color: Colors.blue,
+            borderRadius: BorderRadius.circular(16),
             boxShadow: [
               BoxShadow(
-                color: AppTheme.primaryColor.withOpacity(0.3),
+                color: Colors.blue,
                 blurRadius: 20,
                 offset: const Offset(0, 8),
               ),
@@ -183,16 +181,20 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
           ),
         ),
 
-        const SizedBox(height: AppSpacing.lg),
+        const SizedBox(height: 12),
 
         // Título
         const Text(
           'Iniciar Sesión',
-          style: AppTextStyles.h1,
+          style: TextStyle(
+            fontSize: 32,
+            fontWeight: FontWeight.bold,
+            color: Colors.black,
+          ),
           textAlign: TextAlign.center,
         ),
 
-        const SizedBox(height: AppSpacing.sm),
+        const SizedBox(height: 8),
 
         // Subtítulo
         Text(
@@ -231,7 +233,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
           },
         ),
 
-        const SizedBox(height: AppSpacing.md),
+        const SizedBox(height: 16),
 
         // Campo de contraseña
         CustomTextField(
@@ -275,7 +277,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
               _rememberSession = value ?? false;
             });
           },
-          activeColor: AppTheme.primaryColor,
+          activeColor: Colors.blue,
         ),
         Expanded(
           child: GestureDetector(
@@ -308,7 +310,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       children: [
         Expanded(child: Divider(color: Colors.grey[300], thickness: 1)),
         Padding(
-          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
+          padding: const EdgeInsets.symmetric(horizontal: 16),
           child: Text(
             'o',
             style: TextStyle(color: Colors.grey[600], fontSize: 14),
@@ -333,7 +335,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
             'Regístrate',
             style: TextStyle(
               fontSize: 14,
-              color: AppTheme.primaryColor,
+              color: Colors.blue,
               fontWeight: FontWeight.w600,
             ),
           ),

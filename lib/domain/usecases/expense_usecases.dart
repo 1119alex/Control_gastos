@@ -2,7 +2,6 @@ import '../entities/expense.dart';
 import '../entities/category.dart';
 
 class ExpenseUsecases {
-  // Usecase: Validar creación de gasto
   ExpenseValidationResult validateExpenseCreation({
     required double amount,
     required String description,

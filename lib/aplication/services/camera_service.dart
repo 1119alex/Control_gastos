@@ -7,10 +7,6 @@ import 'package:path/path.dart' as path;
 class CameraService {
   final ImagePicker _picker = ImagePicker();
 
-  // =============================================
-  // GESTIÓN DE PERMISOS
-  // =============================================
-
   // Verificar permisos de cámara
   Future<bool> checkCameraPermission() async {
     try {
@@ -51,9 +47,8 @@ class CameraService {
   Future<bool> checkStoragePermission() async {
     try {
       if (Platform.isAndroid) {
-        // Para Android, no necesitamos permisos especiales para app-specific storage
         print('📱 Android detectado - usando almacenamiento interno de la app');
-        return true; // <-- Esta línea DEBE estar aquí
+        return true;
       } else if (Platform.isIOS) {
         final status = await Permission.photos.status;
         print('📸 Estado del permiso de fotos iOS: $status');
@@ -62,7 +57,7 @@ class CameraService {
       return true;
     } catch (e) {
       print('❌ Error verificando permisos de almacenamiento: $e');
-      return true; // Para almacenamiento interno, no necesitamos permisos
+      return true;
     }
   }
 
@@ -70,7 +65,6 @@ class CameraService {
   Future<bool> requestStoragePermission() async {
     try {
       if (Platform.isAndroid) {
-        // En Android moderno, no necesitamos permisos para app-specific storage
         print(
           '📱 Android - no se requieren permisos adicionales para almacenamiento interno',
         );
@@ -83,7 +77,7 @@ class CameraService {
       return true;
     } catch (e) {
       print('❌ Error solicitando permisos de almacenamiento: $e');
-      return true; // Para almacenamiento interno, no necesitamos permisos
+      return true;
     }
   }
 
@@ -112,10 +106,7 @@ class CameraService {
     return result;
   }
 
-  // =============================================
   // CAPTURA DE IMÁGENES
-  // =============================================
-
   // Capturar foto desde la cámara
   Future<CameraResult> captureFromCamera({
     int imageQuality = 85,
@@ -155,7 +146,6 @@ class CameraService {
         if (savedPath != null) {
           print('💾 Imagen guardada en: $savedPath');
 
-          // Obtener información del archivo
           final file = File(savedPath);
           final fileSize = await file.length();
 
@@ -238,10 +228,7 @@ class CameraService {
     }
   }
 
-  // =============================================
   // GESTIÓN DE ARCHIVOS
-  // =============================================
-
   // Guardar imagen en directorio de la aplicación
   Future<String?> _saveImageToAppDirectory(XFile photo) async {
     try {
@@ -369,11 +356,7 @@ class CameraService {
     }
   }
 
-  // =============================================
-  // UTILIDADES
-  // =============================================
-
-  // Limpiar imágenes antiguas (más de 30 días)
+  // Limpiar imágenes antiguas
   Future<void> cleanupOldImages() async {
     try {
       final receiptsDir = await getReceiptsDirectory();
@@ -439,10 +422,6 @@ class CameraService {
     return '${size.toStringAsFixed(i == 0 ? 0 : 1)} ${suffixes[i]}';
   }
 }
-
-// =============================================
-// CLASES DE RESULTADO Y DATOS (SIN CAMBIOS)
-// =============================================
 
 // Resultado de operaciones de cámara
 class CameraResult {

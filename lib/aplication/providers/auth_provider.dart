@@ -9,15 +9,14 @@ import '../services/auth_service.dart';
 
 // Estado de autenticación
 enum AuthStatus {
-  initial, // Estado inicial
-  checking, // Verificando sesión
-  authenticated, // Usuario autenticado
-  unauthenticated, // Usuario no autenticado
-  loading, // Procesando login/registro
-  error, // Error en autenticación
+  initial,
+  checking,
+  authenticated,
+  unauthenticated,
+  loading,
+  error,
 }
 
-// Clase para el estado de autenticación
 class AuthState {
   final AuthStatus status;
   final User? user;
@@ -45,7 +44,6 @@ class AuthState {
     );
   }
 
-  // Estados de conveniencia
   bool get isAuthenticated =>
       status == AuthStatus.authenticated && user != null;
   bool get isUnauthenticated => status == AuthStatus.unauthenticated;
@@ -53,7 +51,6 @@ class AuthState {
   bool get isChecking => status == AuthStatus.checking;
 }
 
-// StateNotifier para manejar autenticación
 class AuthNotifier extends StateNotifier<AuthState> {
   final DatabaseService _databaseService;
   final StorageService _storageService;
@@ -69,7 +66,6 @@ class AuthNotifier extends StateNotifier<AuthState> {
     _checkAuthStatus();
   }
 
-  // Verificar estado de autenticación al iniciar
   Future<void> _checkAuthStatus() async {
     try {
       state = state.copyWith(status: AuthStatus.checking);
@@ -319,10 +315,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
       );
 
       // Actualizar en base de datos
-      final userModel = UserModel.fromEntity(
-        updatedUser,
-        '', // Password hash no se actualiza aquí
-      );
+      final userModel = UserModel.fromEntity(updatedUser, '');
       await _databaseService.updateUser(userModel);
 
       // Actualizar sesión
@@ -434,7 +427,6 @@ class AuthNotifier extends StateNotifier<AuthState> {
     return 'Bienvenido';
   }
 
-  // Verificar si debe mostrar tutorial
   bool shouldShowTutorial() {
     if (state.user != null) {
       return _authUsecases.shouldShowTutorial(state.user!);
@@ -443,7 +435,6 @@ class AuthNotifier extends StateNotifier<AuthState> {
   }
 }
 
-// Provider del AuthNotifier
 final authProvider = StateNotifierProvider<AuthNotifier, AuthState>((ref) {
   return AuthNotifier(
     DatabaseService(),
@@ -453,7 +444,6 @@ final authProvider = StateNotifierProvider<AuthNotifier, AuthState>((ref) {
   );
 });
 
-// Providers de conveniencia
 final currentUserProvider = Provider<User?>((ref) {
   return ref.watch(authProvider).user;
 });

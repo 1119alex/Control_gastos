@@ -1,7 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../services/camera_service.dart';
 
-// Estado de la cámara
 class CameraState {
   final String? lastCapturedImage;
   final bool isLoading;
@@ -38,7 +37,6 @@ class CameraState {
   int get imageCount => capturedImages.length;
 }
 
-// StateNotifier para manejar la cámara
 class CameraNotifier extends StateNotifier<CameraState> {
   final CameraService _cameraService;
 
@@ -163,7 +161,6 @@ class CameraNotifier extends StateNotifier<CameraState> {
     try {
       state = state.copyWith(isLoading: true, errorMessage: null);
 
-      // Usar configuración predeterminada para recibos si no se proporciona
       final cameraConfig = config ?? CameraConfig.forReceipts();
 
       // Seleccionar imagen
@@ -314,7 +311,6 @@ class CameraNotifier extends StateNotifier<CameraState> {
     _checkPermissions();
   }
 
-  // Agregar imagen existente a la lista (para cuando se carga desde BD)
   void addExistingImage(String imagePath) {
     if (!state.capturedImages.contains(imagePath)) {
       final updatedImages = [...state.capturedImages, imagePath];
@@ -325,7 +321,6 @@ class CameraNotifier extends StateNotifier<CameraState> {
     }
   }
 
-  // Remover imagen de la lista sin eliminar archivo
   void removeImageFromList(String imagePath) {
     final updatedImages = state.capturedImages
         .where((path) => path != imagePath)

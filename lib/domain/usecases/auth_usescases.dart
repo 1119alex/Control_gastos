@@ -1,7 +1,6 @@
 import '../entities/user.dart';
 
 class AuthUsecases {
-  // Usecase: Validar datos de registro
   AuthValidationResult validateRegistration({
     required String name,
     required String email,
@@ -155,9 +154,7 @@ class AuthUsecases {
     return true;
   }
 
-  // Usecase: Verificar si debe mostrar tutorial
   bool shouldShowTutorial(User user) {
-    // Mostrar tutorial si es usuario nuevo (menos de 7 días)
     return user.isNewUser;
   }
 

@@ -14,11 +14,7 @@ class AuthService {
   static const String _keyLoginTimestamp = 'login_timestamp';
   static const String _keySessionToken = 'session_token';
 
-  // =============================================
-  // MÉTODOS DE CRIPTOGRAFÍA
-  // =============================================
-
-  // Hashear contraseña usando SHA-256
+  // Hashear contraseña
   String hashPassword(String password) {
     var bytes = utf8.encode(password);
     var digest = sha256.convert(bytes);
@@ -54,10 +50,7 @@ class AuthService {
     ).join();
   }
 
-  // =============================================
   // GESTIÓN DE SESIONES
-  // =============================================
-
   // Guardar sesión del usuario en SharedPreferences
   Future<void> saveUserSession({
     required UserModel user,
@@ -82,7 +75,6 @@ class AuthService {
 
         print('✅ Sesión persistente guardada para: ${user.email}');
       } else {
-        // Solo marcar como logueado pero sin guardar datos permanentes
         await prefs.setBool(_keyIsLoggedIn, true);
         await prefs.setBool(_keyRememberSession, false);
         await prefs.setString(_keySessionToken, sessionToken);
@@ -104,13 +96,11 @@ class AuthService {
       bool rememberSession = prefs.getBool(_keyRememberSession) ?? false;
 
       if (isLoggedIn && rememberSession) {
-        // Verificar si la sesión no es muy antigua (30 días)
         String? loginTimestamp = prefs.getString(_keyLoginTimestamp);
         if (loginTimestamp != null) {
           DateTime loginTime = DateTime.parse(loginTimestamp);
           DateTime now = DateTime.now();
 
-          // Si la sesión tiene más de 30 días, expirarla
           if (now.difference(loginTime).inDays > 30) {
             await clearUserSession();
             return false;
@@ -223,10 +213,7 @@ class AuthService {
     }
   }
 
-  // =============================================
   // VALIDACIONES
-  // =============================================
-
   // Validar formato de email
   bool isValidEmail(String email) {
     return RegExp(
@@ -264,12 +251,12 @@ class AuthService {
       strength += 1;
     }
 
-    // Bonus: caracteres especiales
+    // caracteres especiales
     if (RegExp(r'[!@#$%^&*(),.?":{}|<>]').hasMatch(password)) {
       strength += 1;
     }
 
-    // Bonus: longitud mayor a 8
+    //  longitud mayor a 8
     if (password.length >= 8) {
       strength += 1;
     }
@@ -356,11 +343,8 @@ class AuthService {
     return {'isValid': errors.isEmpty, 'errors': errors};
   }
 
-  // =============================================
   // UTILIDADES DE SESIÓN
-  // =============================================
 
-  // Actualizar timestamp de última actividad (para sesiones)
   Future<void> updateLastActivity() async {
     try {
       final prefs = await SharedPreferences.getInstance();
@@ -452,28 +436,21 @@ class AuthService {
     }
   }
 
-  // =============================================
   // SEGURIDAD ADICIONAL
-  // =============================================
-
-  // Verificar integridad de la sesión
   Future<bool> verifySessionIntegrity() async {
     try {
       final prefs = await SharedPreferences.getInstance();
-
-      // Verificar que todos los datos esenciales estén presentes
       bool isLoggedIn = prefs.getBool(_keyIsLoggedIn) ?? false;
       int? userId = prefs.getInt(_keyUserId);
       String? sessionToken = prefs.getString(_keySessionToken);
 
       if (isLoggedIn) {
-        // Para sesión activa, debe tener userId y sessionToken
         return userId != null &&
             sessionToken != null &&
             sessionToken.isNotEmpty;
       }
 
-      return true; // Sesión no activa es válida
+      return true;
     } catch (e) {
       print('❌ Error verificando integridad de sesión: $e');
       return false;

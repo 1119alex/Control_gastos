@@ -15,7 +15,7 @@ class DatabaseService {
   DatabaseService._internal();
 
   // Versión de la base de datos
-  static const int _databaseVersion = 3;
+  static const int _databaseVersion = 4;
   static const String _databaseName = 'gestor_gastos.db';
 
   // Nombres de las tablas
@@ -177,10 +177,6 @@ class DatabaseService {
     await db.execute('PRAGMA foreign_keys = ON');
   }
 
-  // =============================================
-  // MÉTODOS PARA USUARIOS
-  // =============================================
-
   // Crear usuario
   Future<int> insertUser(UserModel user) async {
     try {
@@ -251,10 +247,7 @@ class DatabaseService {
     }
   }
 
-  // =============================================
   // MÉTODOS PARA CATEGORÍAS
-  // =============================================
-
   // Crear categoría
   Future<int> insertCategory(CategoryModel category) async {
     try {
@@ -322,10 +315,7 @@ class DatabaseService {
     }
   }
 
-  // =============================================
   // MÉTODOS PARA GASTOS
-  // =============================================
-
   // Crear gasto
   Future<int> insertExpense(ExpenseModel expense) async {
     try {
@@ -445,10 +435,7 @@ class DatabaseService {
     }
   }
 
-  // =============================================
   // MÉTODOS DE UTILIDAD
-  // =============================================
-
   // Obtener estadísticas de la base de datos
   Future<Map<String, dynamic>> getDatabaseStats() async {
     try {
@@ -509,12 +496,7 @@ class DatabaseService {
     }
   }
 
-  // Agregar estos métodos a la clase DatabaseService existente
-
-  // =============================================
   // MÉTODOS PARA PRESUPUESTOS
-  // =============================================
-
   // Crear presupuesto
   Future<int> insertBudget(BudgetModel budget) async {
     try {

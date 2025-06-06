@@ -92,7 +92,7 @@ class CategoryNotifier extends StateNotifier<CategoryState> {
       // Validar que no exista una categoría con el mismo nombre
       final existingCategory = state.categories
           .where((cat) => cat.name.toLowerCase() == name.toLowerCase().trim())
-          .firstOrNull; // Usar firstOrNull en lugar de firstWhere
+          .firstOrNull;
 
       if (existingCategory != null) {
         state = state.copyWith(
@@ -147,7 +147,6 @@ class CategoryNotifier extends StateNotifier<CategoryState> {
     }
   }
 
-  // Actualizar categoría existente
   Future<bool> updateCategory({
     required int categoryId,
     String? name,
@@ -217,7 +216,7 @@ class CategoryNotifier extends StateNotifier<CategoryState> {
     }
   }
 
-  // Eliminar categoría (soft delete)
+  // Eliminar categoría
   Future<bool> deleteCategory(int categoryId) async {
     try {
       state = state.copyWith(isLoading: true, errorMessage: null);

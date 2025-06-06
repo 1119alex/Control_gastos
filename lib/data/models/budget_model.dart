@@ -25,11 +25,7 @@ class BudgetModel {
     this.updatedAt,
   });
 
-  // =============================================
-  // CONVERSIÓN DESDE/HACIA ENTITY (DOMAIN)
-  // =============================================
-
-  // Convertir de Entity (Domain) a Model (Data)
+  // Convertir de Entity  a Model
   factory BudgetModel.fromEntity(Budget entity) {
     return BudgetModel(
       id: entity.id,
@@ -45,7 +41,7 @@ class BudgetModel {
     );
   }
 
-  // Convertir de Model (Data) a Entity (Domain)
+  // Convertir de Model a Entity
   Budget toEntity() {
     return Budget(
       id: id,
@@ -61,11 +57,7 @@ class BudgetModel {
     );
   }
 
-  // =============================================
-  // CONVERSIÓN DESDE/HACIA DATABASE (SQLITE)
-  // =============================================
-
-  // Convertir de Map (SQLite) a BudgetModel
+  // Convertir de SQLite a BudgetModel
   factory BudgetModel.fromMap(Map<String, dynamic> map) {
     return BudgetModel(
       id: map['id']?.toInt(),
@@ -83,7 +75,7 @@ class BudgetModel {
     );
   }
 
-  // Convertir de BudgetModel a Map (para SQLite)
+  // Convertir de BudgetModel a para SQLite
   Map<String, dynamic> toMap() {
     return {
       'id': id,
@@ -98,10 +90,6 @@ class BudgetModel {
       'updated_at': updatedAt?.toIso8601String(),
     };
   }
-
-  // =============================================
-  // MÉTODOS DE UTILIDAD
-  // =============================================
 
   // Crear una copia con campos modificados
   BudgetModel copyWith({
@@ -147,7 +135,7 @@ class BudgetModel {
     required int month,
     required int year,
     required double averageSpending,
-    double marginPercentage = 20.0, // 20% más que el promedio
+    double marginPercentage = 20.0,
   }) {
     final suggestedLimit = averageSpending * (1 + marginPercentage / 100);
 
@@ -193,7 +181,7 @@ class BudgetModel {
     return userId == targetUserId;
   }
 
-  // Obtener período como string único (para índices)
+  // Obtener período como string único
   String get periodKey {
     return '$year-${month.toString().padLeft(2, '0')}';
   }
@@ -203,7 +191,7 @@ class BudgetModel {
     return copyWith(spentAmount: newSpentAmount, updatedAt: DateTime.now());
   }
 
-  // Desactivar presupuesto (soft delete)
+  // Desactivar presupuesto
   BudgetModel deactivate() {
     return copyWith(isActive: false, updatedAt: DateTime.now());
   }

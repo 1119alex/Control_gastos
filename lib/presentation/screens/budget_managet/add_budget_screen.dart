@@ -166,7 +166,6 @@ class _AddBudgetScreenState extends ConsumerState<AddBudgetScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              // Preview del presupuesto
               if (_selectedCategory != null) _buildBudgetPreview(),
 
               const SizedBox(height: 24),

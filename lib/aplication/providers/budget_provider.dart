@@ -7,7 +7,6 @@ import 'auth_provider.dart';
 import 'expense_provider.dart';
 import 'category_provider.dart';
 
-// Estado de presupuestos
 class BudgetState {
   final List<Budget> budgets;
   final bool isLoading;
@@ -40,7 +39,6 @@ class BudgetState {
   int get budgetCount => budgets.length;
 }
 
-// StateNotifier para manejar presupuestos
 class BudgetNotifier extends StateNotifier<BudgetState> {
   final DatabaseService _databaseService;
   final BudgetUsecases _budgetUsecases;
@@ -96,7 +94,6 @@ class BudgetNotifier extends StateNotifier<BudgetState> {
 
       state = state.copyWith(isLoading: true, errorMessage: null);
 
-      // Verificar que no exista un presupuesto para la misma categoría y período
       final existingBudget = state.budgets
           .where(
             (budget) =>
