@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:control_gastos/data/models/budget_model.dart';
 import 'package:path/path.dart';
 import 'package:sqflite/sqflite.dart';
 import '../models/user_model.dart';
@@ -14,7 +15,7 @@ class DatabaseService {
   DatabaseService._internal();
 
   // Versión de la base de datos
-  static const int _databaseVersion = 1;
+  static const int _databaseVersion = 3;
   static const String _databaseName = 'gestor_gastos.db';
 
   // Nombres de las tablas
@@ -22,7 +23,7 @@ class DatabaseService {
   static const String _categoriesTable = 'categories';
   static const String _expensesTable = 'expenses';
   static const String _receiptsTable = 'receipts';
-
+  static const String _budgetsTable = 'budgets';
   // Obtener la instancia de la base de datos
   Future<Database> get database async {
     _database ??= await _initDatabase();
@@ -108,6 +109,24 @@ class DatabaseService {
         FOREIGN KEY (expense_id) REFERENCES $_expensesTable (id) ON DELETE CASCADE
       )
     ''');
+    // Tabla de presupuestos
+    await db.execute('''
+      CREATE TABLE $_budgetsTable(
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        category_id INTEGER NOT NULL,
+        user_id INTEGER NOT NULL,
+        month INTEGER NOT NULL,
+        year INTEGER NOT NULL,
+        limit_amount REAL NOT NULL,
+        spent_amount REAL NOT NULL DEFAULT 0.0,
+        is_active INTEGER NOT NULL DEFAULT 1,
+        created_at TEXT NOT NULL,
+        updated_at TEXT,
+        FOREIGN KEY (category_id) REFERENCES $_categoriesTable (id),
+        FOREIGN KEY (user_id) REFERENCES $_usersTable (id) ON DELETE CASCADE,
+        UNIQUE(category_id, month, year, user_id)
+      )
+    ''');
 
     // Crear índices para mejorar el rendimiento
     await _createIndexes(db);
@@ -134,7 +153,15 @@ class DatabaseService {
     await db.execute(
       'CREATE INDEX idx_receipts_expense_id ON $_receiptsTable(expense_id)',
     );
-
+    await db.execute(
+      'CREATE INDEX idx_budgets_user_id ON $_budgetsTable(user_id)',
+    );
+    await db.execute(
+      'CREATE INDEX idx_budgets_period ON $_budgetsTable(month, year)',
+    );
+    await db.execute(
+      'CREATE INDEX idx_budgets_category ON $_budgetsTable(category_id)',
+    );
     print('✅ Índices creados');
   }
 
@@ -479,6 +506,332 @@ class DatabaseService {
       print('🗑️ Base de datos eliminada');
     } catch (e) {
       print('❌ Error eliminando base de datos: $e');
+    }
+  }
+
+  // Agregar estos métodos a la clase DatabaseService existente
+
+  // =============================================
+  // MÉTODOS PARA PRESUPUESTOS
+  // =============================================
+
+  // Crear presupuesto
+  Future<int> insertBudget(BudgetModel budget) async {
+    try {
+      final db = await database;
+      final id = await db.insert(_budgetsTable, budget.toMap());
+      print('✅ Presupuesto creado con ID: $id');
+      return id;
+    } catch (e) {
+      print('❌ Error creando presupuesto: $e');
+      throw Exception('Error al crear presupuesto: $e');
+    }
+  }
+
+  // Obtener presupuestos de un usuario
+  Future<List<BudgetModel>> getBudgetsByUser(int userId) async {
+    try {
+      final db = await database;
+      final List<Map<String, dynamic>> maps = await db.query(
+        _budgetsTable,
+        where: 'user_id = ? AND is_active = ?',
+        whereArgs: [userId, 1],
+        orderBy: 'year DESC, month DESC',
+      );
+
+      return List.generate(maps.length, (i) {
+        return BudgetModel.fromMap(maps[i]);
+      });
+    } catch (e) {
+      print('❌ Error obteniendo presupuestos: $e');
+      return [];
+    }
+  }
+
+  // Obtener presupuestos por período
+  Future<List<BudgetModel>> getBudgetsByPeriod(
+    int userId,
+    int month,
+    int year,
+  ) async {
+    try {
+      final db = await database;
+      final List<Map<String, dynamic>> maps = await db.query(
+        _budgetsTable,
+        where: 'user_id = ? AND month = ? AND year = ? AND is_active = ?',
+        whereArgs: [userId, month, year, 1],
+        orderBy: 'category_id ASC',
+      );
+
+      return List.generate(maps.length, (i) {
+        return BudgetModel.fromMap(maps[i]);
+      });
+    } catch (e) {
+      print('❌ Error obteniendo presupuestos por período: $e');
+      return [];
+    }
+  }
+
+  // Obtener presupuestos por categoría
+  Future<List<BudgetModel>> getBudgetsByCategory(
+    int userId,
+    int categoryId,
+  ) async {
+    try {
+      final db = await database;
+      final List<Map<String, dynamic>> maps = await db.query(
+        _budgetsTable,
+        where: 'user_id = ? AND category_id = ? AND is_active = ?',
+        whereArgs: [userId, categoryId, 1],
+        orderBy: 'year DESC, month DESC',
+      );
+
+      return List.generate(maps.length, (i) {
+        return BudgetModel.fromMap(maps[i]);
+      });
+    } catch (e) {
+      print('❌ Error obteniendo presupuestos por categoría: $e');
+      return [];
+    }
+  }
+
+  // Obtener presupuesto específico
+  Future<BudgetModel?> getBudget(
+    int userId,
+    int categoryId,
+    int month,
+    int year,
+  ) async {
+    try {
+      final db = await database;
+      final List<Map<String, dynamic>> maps = await db.query(
+        _budgetsTable,
+        where:
+            'user_id = ? AND category_id = ? AND month = ? AND year = ? AND is_active = ?',
+        whereArgs: [userId, categoryId, month, year, 1],
+        limit: 1,
+      );
+
+      if (maps.isNotEmpty) {
+        return BudgetModel.fromMap(maps.first);
+      }
+      return null;
+    } catch (e) {
+      print('❌ Error obteniendo presupuesto específico: $e');
+      return null;
+    }
+  }
+
+  // Actualizar presupuesto
+  Future<void> updateBudget(BudgetModel budget) async {
+    try {
+      final db = await database;
+      await db.update(
+        _budgetsTable,
+        budget.copyWith(updatedAt: DateTime.now()).toMap(),
+        where: 'id = ?',
+        whereArgs: [budget.id],
+      );
+      print('✅ Presupuesto actualizado: ${budget.id}');
+    } catch (e) {
+      print('❌ Error actualizando presupuesto: $e');
+      throw Exception('Error al actualizar presupuesto: $e');
+    }
+  }
+
+  // Actualizar solo el monto gastado
+  Future<void> updateBudgetSpentAmount(int budgetId, double spentAmount) async {
+    try {
+      final db = await database;
+      await db.update(
+        _budgetsTable,
+        {
+          'spent_amount': spentAmount,
+          'updated_at': DateTime.now().toIso8601String(),
+        },
+        where: 'id = ?',
+        whereArgs: [budgetId],
+      );
+      print('✅ Monto gastado actualizado para presupuesto $budgetId');
+    } catch (e) {
+      print('❌ Error actualizando monto gastado: $e');
+      throw Exception('Error al actualizar monto gastado: $e');
+    }
+  }
+
+  // Eliminar presupuesto (soft delete)
+  Future<void> deleteBudget(int budgetId) async {
+    try {
+      final db = await database;
+      await db.update(
+        _budgetsTable,
+        {'is_active': 0, 'updated_at': DateTime.now().toIso8601String()},
+        where: 'id = ?',
+        whereArgs: [budgetId],
+      );
+      print('✅ Presupuesto eliminado (soft delete): $budgetId');
+    } catch (e) {
+      print('❌ Error eliminando presupuesto: $e');
+      throw Exception('Error al eliminar presupuesto: $e');
+    }
+  }
+
+  // Obtener estadísticas de presupuestos
+  Future<Map<String, dynamic>> getBudgetStats(int userId) async {
+    try {
+      final db = await database;
+
+      // Total de presupuestos activos
+      final totalBudgets =
+          Sqflite.firstIntValue(
+            await db.rawQuery(
+              'SELECT COUNT(*) FROM $_budgetsTable WHERE user_id = ? AND is_active = 1',
+              [userId],
+            ),
+          ) ??
+          0;
+
+      // Total límite establecido
+      final totalLimit = await db.rawQuery(
+        'SELECT SUM(limit_amount) as total FROM $_budgetsTable WHERE user_id = ? AND is_active = 1',
+        [userId],
+      );
+      final limitAmount =
+          (totalLimit.first['total'] as num?)?.toDouble() ?? 0.0;
+
+      // Total gastado
+      final totalSpent = await db.rawQuery(
+        'SELECT SUM(spent_amount) as total FROM $_budgetsTable WHERE user_id = ? AND is_active = 1',
+        [userId],
+      );
+      final spentAmount =
+          (totalSpent.first['total'] as num?)?.toDouble() ?? 0.0;
+
+      // Presupuestos excedidos
+      final exceededBudgets =
+          Sqflite.firstIntValue(
+            await db.rawQuery(
+              'SELECT COUNT(*) FROM $_budgetsTable WHERE user_id = ? AND is_active = 1 AND spent_amount > limit_amount',
+              [userId],
+            ),
+          ) ??
+          0;
+
+      return {
+        'total_budgets': totalBudgets,
+        'total_limit': limitAmount,
+        'total_spent': spentAmount,
+        'total_remaining': limitAmount - spentAmount,
+        'exceeded_budgets': exceededBudgets,
+        'healthy_budgets': totalBudgets - exceededBudgets,
+      };
+    } catch (e) {
+      print('❌ Error obteniendo estadísticas de presupuestos: $e');
+      return {};
+    }
+  }
+
+  // Actualizar montos gastados basado en gastos
+  Future<void> recalculateBudgetSpentAmounts(int userId) async {
+    try {
+      final db = await database;
+
+      // Obtener todos los presupuestos activos del usuario
+      final budgets = await getBudgetsByUser(userId);
+
+      for (final budget in budgets) {
+        // Calcular el gasto real para este presupuesto
+        final spentResult = await db.rawQuery(
+          '''
+          SELECT SUM(amount) as total 
+          FROM $_expensesTable 
+          WHERE user_id = ? 
+            AND category_id = ? 
+            AND strftime('%m', expense_date) = ? 
+            AND strftime('%Y', expense_date) = ?
+        ''',
+          [
+            userId,
+            budget.categoryId,
+            budget.month.toString().padLeft(2, '0'),
+            budget.year.toString(),
+          ],
+        );
+
+        final actualSpent =
+            (spentResult.first['total'] as num?)?.toDouble() ?? 0.0;
+
+        // Actualizar el presupuesto con el monto real
+        await updateBudgetSpentAmount(budget.id!, actualSpent);
+      }
+
+      print('✅ Montos gastados recalculados para usuario $userId');
+    } catch (e) {
+      print('❌ Error recalculando montos gastados: $e');
+      throw Exception('Error al recalcular montos gastados: $e');
+    }
+  }
+
+  // Obtener resumen de presupuesto por categoría
+  Future<List<Map<String, dynamic>>> getBudgetSummaryByCategory(
+    int userId,
+    int month,
+    int year,
+  ) async {
+    try {
+      final db = await database;
+      final result = await db.rawQuery(
+        '''
+        SELECT 
+          b.category_id,
+          c.name as category_name,
+          c.color as category_color,
+          b.limit_amount,
+          b.spent_amount,
+          (b.limit_amount - b.spent_amount) as remaining_amount,
+          CASE 
+            WHEN b.spent_amount > b.limit_amount THEN 'exceeded'
+            WHEN (b.spent_amount / b.limit_amount * 100) >= 90 THEN 'at_risk'
+            WHEN (b.spent_amount / b.limit_amount * 100) >= 80 THEN 'near_limit'
+            ELSE 'healthy'
+          END as status
+        FROM $_budgetsTable b
+        INNER JOIN $_categoriesTable c ON b.category_id = c.id
+        WHERE b.user_id = ? AND b.month = ? AND b.year = ? AND b.is_active = 1
+        ORDER BY b.spent_amount DESC
+      ''',
+        [userId, month, year],
+      );
+
+      return result;
+    } catch (e) {
+      print('❌ Error obteniendo resumen por categoría: $e');
+      return [];
+    }
+  }
+
+  // Verificar si existe presupuesto duplicado
+  Future<bool> budgetExists(
+    int userId,
+    int categoryId,
+    int month,
+    int year,
+  ) async {
+    try {
+      final db = await database;
+      final count =
+          Sqflite.firstIntValue(
+            await db.rawQuery(
+              'SELECT COUNT(*) FROM $_budgetsTable WHERE user_id = ? AND category_id = ? AND month = ? AND year = ? AND is_active = 1',
+              [userId, categoryId, month, year],
+            ),
+          ) ??
+          0;
+
+      return count > 0;
+    } catch (e) {
+      print('❌ Error verificando existencia de presupuesto: $e');
+      return false;
     }
   }
 }

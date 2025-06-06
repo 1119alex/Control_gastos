@@ -9,6 +9,9 @@ import '../widgets/loading_widget.dart';
 import 'login_screen.dart';
 import 'add_expense_screen.dart';
 import 'expense_list_screen.dart';
+import '../../aplication/providers/budget_provider.dart';
+import '../../domain/usecases/budget_usecases.dart';
+import '../screens/budget_managet/budget_screen.dart';
 
 class DashboardScreen extends ConsumerStatefulWidget {
   const DashboardScreen({super.key});
@@ -42,6 +45,9 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
       // Cargar datos iniciales de forma segura y secuencial
       await ref.read(categoryProvider.notifier).loadCategories();
       await ref.read(expenseProvider.notifier).loadExpenses();
+      await ref
+          .read(budgetProvider.notifier)
+          .loadBudgets(); // ← AGREGAR ESTA LÍNEA
 
       print('📊 Dashboard: Datos cargados exitosamente');
     } catch (e) {
@@ -62,6 +68,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
       await Future.wait([
         ref.read(categoryProvider.notifier).loadCategories(),
         ref.read(expenseProvider.notifier).loadExpenses(),
+        ref.read(budgetProvider.notifier).loadBudgets(),
       ]);
 
       print('✅ Dashboard: Datos refrescados');
@@ -277,6 +284,11 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
 
               // Estadísticas rápidas
               _buildQuickStats(),
+
+              const SizedBox(height: 24),
+
+              // Alertas de presupuesto - ← AGREGAR ESTA LÍNEA Y LA SECCIÓN SIGUIENTE
+              _buildBudgetAlerts(),
             ],
           ),
         ),
@@ -301,6 +313,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     return Consumer(
       builder: (context, ref, child) {
         final expenseState = ref.watch(expenseProvider);
+        final budgetSummary = ref.watch(budgetSummaryProvider);
         final user = ref.watch(currentUserProvider)!;
 
         if (expenseState.isLoading) {
@@ -329,6 +342,8 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                   style: TextStyle(fontSize: 20, fontWeight: FontWeight.w600),
                 ),
                 const SizedBox(height: 16),
+
+                // Primera fila - Gastos
                 Row(
                   children: [
                     Expanded(
@@ -357,6 +372,48 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                     ),
                   ],
                 ),
+
+                // Segunda fila - Presupuestos (si hay)
+                if (budgetSummary.totalBudgets > 0) ...[
+                  const SizedBox(height: 16),
+                  Container(
+                    height: 1,
+                    color: Colors.grey[200],
+                    margin: const EdgeInsets.symmetric(vertical: 8),
+                  ),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: _buildSummaryItem(
+                          title: 'Presupuestado',
+                          amount: budgetSummary.totalLimit,
+                          currency: user.currency,
+                          color: const Color(0xFF2196F3),
+                          icon: Icons.account_balance_wallet,
+                        ),
+                      ),
+                      Container(
+                        width: 1,
+                        height: 60,
+                        color: Colors.grey[300],
+                        margin: const EdgeInsets.symmetric(horizontal: 16),
+                      ),
+                      Expanded(
+                        child: _buildSummaryItem(
+                          title: 'Disponible',
+                          amount: budgetSummary.totalRemaining,
+                          currency: user.currency,
+                          color: budgetSummary.totalRemaining >= 0
+                              ? const Color(0xFF4CAF50)
+                              : const Color(0xFFE53935),
+                          icon: budgetSummary.totalRemaining >= 0
+                              ? Icons.savings
+                              : Icons.warning,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
               ],
             ),
           ),
@@ -458,16 +515,22 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
             const SizedBox(width: 16),
             Expanded(
               child: _buildActionCard(
-                title: 'Presupuestos',
+                title:
+                    'Presupuestos', // ← CAMBIAR DE "Presupuestos" a funcional
                 icon: Icons.account_balance_wallet,
-                color: const Color(0xFFFF5722),
+                color: const Color(0xFFFF5722), // ← CAMBIAR COLOR
                 onTap: () {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Próximamente: Presupuestos'),
-                      behavior: SnackBarBehavior.floating,
-                    ),
-                  );
+                  Navigator.of(context)
+                      .push(
+                        MaterialPageRoute(
+                          builder: (context) =>
+                              const BudgetScreen(), // ← CAMBIAR A BudgetScreen
+                        ),
+                      )
+                      .then((_) {
+                        // Refrescar datos cuando regresemos
+                        _refreshData();
+                      });
                 },
               ),
             ),
@@ -731,5 +794,99 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
       default:
         return '${amount.toStringAsFixed(2)} $currency';
     }
+  }
+
+  Widget _buildBudgetAlerts() {
+    return Consumer(
+      builder: (context, ref, child) {
+        final alerts = ref.watch(budgetAlertsProvider);
+
+        if (alerts.isEmpty) return const SizedBox.shrink();
+
+        // Mostrar solo las 3 alertas más importantes
+        final topAlerts = alerts.take(3).toList();
+
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Text(
+                  'Alertas de Presupuesto',
+                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.w600),
+                ),
+                if (alerts.length > 3)
+                  TextButton(
+                    onPressed: () {
+                      Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (context) => const BudgetScreen(),
+                        ),
+                      );
+                    },
+                    child: const Text(
+                      'Ver todas',
+                      style: TextStyle(color: Color(0xFFFF5722)),
+                    ),
+                  ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            ...topAlerts.map((alert) => _buildAlertCard(alert)),
+          ],
+        );
+      },
+    );
+  }
+
+  // 8. AGREGAR el método _buildAlertCard() al final de la clase:
+  Widget _buildAlertCard(BudgetAlert alert) {
+    Color alertColor;
+    IconData alertIcon;
+
+    switch (alert.type) {
+      case BudgetAlertType.exceeded:
+        alertColor = const Color(0xFFE53935);
+        alertIcon = Icons.error;
+        break;
+      case BudgetAlertType.atRisk:
+        alertColor = const Color(0xFFFF5722);
+        alertIcon = Icons.warning;
+        break;
+      case BudgetAlertType.nearLimit:
+        alertColor = const Color(0xFFFF9800);
+        alertIcon = Icons.info;
+        break;
+    }
+
+    return Card(
+      elevation: 2,
+      margin: const EdgeInsets.only(bottom: 8),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      child: ListTile(
+        leading: CircleAvatar(
+          backgroundColor: alertColor.withOpacity(0.1),
+          child: Icon(alertIcon, color: alertColor, size: 20),
+        ),
+        title: Text(
+          alert.categoryName,
+          style: const TextStyle(fontWeight: FontWeight.w600),
+        ),
+        subtitle: Text(
+          alert.message,
+          style: TextStyle(color: alertColor, fontSize: 12),
+        ),
+        trailing: Text(
+          '${alert.budget.spentPercentage.toStringAsFixed(0)}%',
+          style: TextStyle(fontWeight: FontWeight.bold, color: alertColor),
+        ),
+        onTap: () {
+          Navigator.of(
+            context,
+          ).push(MaterialPageRoute(builder: (context) => const BudgetScreen()));
+        },
+      ),
+    );
   }
 }
