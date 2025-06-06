@@ -4,9 +4,19 @@ import '../../aplication/providers/auth_provider.dart';
 import '../../aplication/providers/expense_provider.dart';
 import '../../aplication/providers/category_provider.dart';
 import '../../domain/usecases/expense_usecases.dart';
-import '../theme/app_theme.dart';
 import '../widgets/loading_widget.dart';
 import 'login_screen.dart';
+import 'add_expense_screen.dart';
+import 'expense_list_screen.dart';
+import 'test_camera_screen.dart';
+import 'test_camera_screen.dart'; // Agregar esta importaciónd/flutter_riverpod.dart';
+import '../../aplication/providers/auth_provider.dart';
+import '../../aplication/providers/expense_provider.dart';
+import '../../aplication/providers/category_provider.dart';
+import '../../domain/usecases/expense_usecases.dart';
+import '../widgets/loading_widget.dart';
+import 'login_screen.dart';
+import 'add_expense_screen.dart';
 
 class DashboardScreen extends ConsumerStatefulWidget {
   const DashboardScreen({super.key});
@@ -24,13 +34,17 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
 
   Future<void> _loadInitialData() async {
     try {
+      print('📊 Dashboard: Iniciando carga de datos...');
+
       // Cargar datos iniciales de forma segura
       await Future.wait([
         ref.read(categoryProvider.notifier).loadCategories(),
         ref.read(expenseProvider.notifier).loadExpenses(),
       ]);
+
+      print('📊 Dashboard: Datos cargados exitosamente');
     } catch (e) {
-      print('❌ Error cargando datos iniciales: $e');
+      print('❌ Dashboard: Error cargando datos iniciales: $e');
       // No lanzar el error para evitar crash
     }
   }
@@ -61,12 +75,20 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
           ),
           TextButton(
             onPressed: () => Navigator.of(context).pop(true),
-            style: TextButton.styleFrom(foregroundColor: AppTheme.errorColor),
+            style: TextButton.styleFrom(
+              foregroundColor: const Color(0xFFE53935),
+            ),
             child: const Text('Cerrar Sesión'),
           ),
         ],
       ),
     );
+  }
+
+  void _navigateToAddExpense() {
+    Navigator.of(
+      context,
+    ).push(MaterialPageRoute(builder: (context) => const AddExpenseScreen()));
   }
 
   @override
@@ -83,6 +105,9 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     return Scaffold(
       backgroundColor: Colors.grey[50],
       appBar: AppBar(
+        backgroundColor: const Color(0xFF2196F3),
+        foregroundColor: Colors.white,
+        elevation: 2,
         title: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -138,10 +163,10 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
               const PopupMenuItem(
                 value: 'logout',
                 child: ListTile(
-                  leading: Icon(Icons.logout, color: AppTheme.errorColor),
+                  leading: Icon(Icons.logout, color: Color(0xFFE53935)),
                   title: Text(
                     'Cerrar Sesión',
-                    style: TextStyle(color: AppTheme.errorColor),
+                    style: TextStyle(color: Color(0xFFE53935)),
                   ),
                   contentPadding: EdgeInsets.zero,
                 ),
@@ -150,7 +175,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
             child: Padding(
               padding: const EdgeInsets.all(8.0),
               child: CircleAvatar(
-                backgroundColor: AppTheme.primaryColor,
+                backgroundColor: const Color(0xFF4CAF50),
                 child: Text(
                   user.initials,
                   style: const TextStyle(
@@ -167,24 +192,24 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
         onRefresh: _loadInitialData,
         child: SingleChildScrollView(
           physics: const AlwaysScrollableScrollPhysics(),
-          padding: const EdgeInsets.all(AppSpacing.md),
+          padding: const EdgeInsets.all(16),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               // Resumen financiero
               _buildFinancialSummary(),
 
-              const SizedBox(height: AppSpacing.lg),
+              const SizedBox(height: 24),
 
               // Acciones rápidas
               _buildQuickActions(),
 
-              const SizedBox(height: AppSpacing.lg),
+              const SizedBox(height: 24),
 
               // Gastos recientes
               _buildRecentExpenses(),
 
-              const SizedBox(height: AppSpacing.lg),
+              const SizedBox(height: 24),
 
               // Estadísticas rápidas
               _buildQuickStats(),
@@ -193,15 +218,9 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
         ),
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          // TODO: Navegar a agregar gasto
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Próximamente: Agregar gasto'),
-              behavior: SnackBarBehavior.floating,
-            ),
-          );
-        },
+        onPressed: _navigateToAddExpense,
+        backgroundColor: const Color(0xFF4CAF50),
+        foregroundColor: Colors.white,
         child: const Icon(Icons.add),
       ),
     );
@@ -223,7 +242,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
         if (expenseState.isLoading) {
           return const Card(
             child: Padding(
-              padding: EdgeInsets.all(AppSpacing.lg),
+              padding: EdgeInsets.all(24),
               child: LoadingWidget(message: 'Cargando resumen...'),
             ),
           );
@@ -232,13 +251,20 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
         final totals = ref.read(expenseProvider.notifier).calculateTotals();
 
         return Card(
+          elevation: 2,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
           child: Padding(
-            padding: const EdgeInsets.all(AppSpacing.lg),
+            padding: const EdgeInsets.all(24),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text('Resumen del Mes', style: AppTextStyles.h3),
-                const SizedBox(height: AppSpacing.md),
+                const Text(
+                  'Resumen del Mes',
+                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.w600),
+                ),
+                const SizedBox(height: 16),
                 Row(
                   children: [
                     Expanded(
@@ -246,7 +272,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                         title: 'Total Gastado',
                         amount: totals.monthTotal,
                         currency: user.currency,
-                        color: AppTheme.errorColor,
+                        color: const Color(0xFFE53935),
                         icon: Icons.trending_up,
                       ),
                     ),
@@ -254,16 +280,14 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                       width: 1,
                       height: 60,
                       color: Colors.grey[300],
-                      margin: const EdgeInsets.symmetric(
-                        horizontal: AppSpacing.md,
-                      ),
+                      margin: const EdgeInsets.symmetric(horizontal: 16),
                     ),
                     Expanded(
                       child: _buildSummaryItem(
                         title: 'Gastos Hoy',
                         amount: totals.todayTotal,
                         currency: user.currency,
-                        color: AppTheme.warningColor,
+                        color: const Color(0xFFFF9800),
                         icon: Icons.today,
                       ),
                     ),
@@ -290,7 +314,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
         Row(
           children: [
             Icon(icon, size: 16, color: color),
-            const SizedBox(width: AppSpacing.xs),
+            const SizedBox(width: 8),
             Text(
               title,
               style: TextStyle(
@@ -301,7 +325,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
             ),
           ],
         ),
-        const SizedBox(height: AppSpacing.xs),
+        const SizedBox(height: 8),
         Text(
           _formatAmount(amount, currency),
           style: TextStyle(
@@ -318,28 +342,71 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text('Acciones Rápidas', style: AppTextStyles.h3),
-        const SizedBox(height: AppSpacing.md),
+        const Text(
+          'Acciones Rápidas',
+          style: TextStyle(fontSize: 20, fontWeight: FontWeight.w600),
+        ),
+        const SizedBox(height: 16),
         Row(
           children: [
             Expanded(
               child: _buildActionCard(
                 title: 'Agregar Gasto',
                 icon: Icons.add_circle_outline,
-                color: AppTheme.primaryColor,
+                color: const Color(0xFF4CAF50),
+                onTap: _navigateToAddExpense,
+              ),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: _buildActionCard(
+                title: 'Lista Gastos',
+                icon: Icons.list_alt,
+                color: const Color(0xFF9C27B0),
                 onTap: () {
-                  // TODO: Implementar
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (context) => const ExpenseListScreen(),
+                    ),
+                  );
                 },
               ),
             ),
-            const SizedBox(width: AppSpacing.md),
+          ],
+        ),
+        const SizedBox(height: 12),
+        Row(
+          children: [
             Expanded(
               child: _buildActionCard(
-                title: 'Ver Reportes',
-                icon: Icons.bar_chart,
-                color: AppTheme.secondaryColor,
+                title: 'Categorías',
+                icon: Icons.category,
+                color: const Color(0xFF9C27B0),
                 onTap: () {
-                  // TODO: Implementar
+                  // TODO: Implementar gestión de categorías
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Próximamente: Gestión de categorías'),
+                      behavior: SnackBarBehavior.floating,
+                    ),
+                  );
+                },
+              ),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: _buildActionCard(
+                title: 'Presupuestos',
+                icon: Icons.account_balance_wallet,
+                color: const Color(0xFFFF5722),
+                onTap: () {
+                  // TODO: Implementar presupuestos
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Próximamente: Presupuestos'),
+                      behavior: SnackBarBehavior.floating,
+                    ),
+                  );
                 },
               ),
             ),
@@ -356,15 +423,17 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     required VoidCallback onTap,
   }) {
     return Card(
+      elevation: 2,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(AppBorderRadius.lg),
+        borderRadius: BorderRadius.circular(12),
         child: Padding(
-          padding: const EdgeInsets.all(AppSpacing.lg),
+          padding: const EdgeInsets.all(20),
           child: Column(
             children: [
               Icon(icon, size: 32, color: color),
-              const SizedBox(height: AppSpacing.sm),
+              const SizedBox(height: 12),
               Text(
                 title,
                 style: const TextStyle(
@@ -392,22 +461,43 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Text('Gastos Recientes', style: AppTextStyles.h3),
+                const Text(
+                  'Gastos Recientes',
+                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.w600),
+                ),
                 TextButton(
                   onPressed: () {
                     // TODO: Ver todos los gastos
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('Próximamente: Lista completa de gastos'),
+                        behavior: SnackBarBehavior.floating,
+                      ),
+                    );
                   },
-                  child: const Text('Ver todos'),
+                  child: const Text(
+                    'Ver todos',
+                    style: TextStyle(color: Color(0xFF2196F3)),
+                  ),
                 ),
               ],
             ),
-            const SizedBox(height: AppSpacing.md),
+            const SizedBox(height: 12),
             if (isLoading)
-              const LoadingWidget(message: 'Cargando gastos...')
+              const Card(
+                child: Padding(
+                  padding: EdgeInsets.all(24),
+                  child: LoadingWidget(message: 'Cargando gastos...'),
+                ),
+              )
             else if (expenses.isEmpty)
               Card(
+                elevation: 2,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
                 child: Padding(
-                  padding: const EdgeInsets.all(AppSpacing.lg),
+                  padding: const EdgeInsets.all(32),
                   child: Column(
                     children: [
                       Icon(
@@ -415,7 +505,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                         size: 48,
                         color: Colors.grey[400],
                       ),
-                      const SizedBox(height: AppSpacing.md),
+                      const SizedBox(height: 16),
                       Text(
                         'No hay gastos registrados',
                         style: TextStyle(
@@ -424,7 +514,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                           fontWeight: FontWeight.w500,
                         ),
                       ),
-                      const SizedBox(height: AppSpacing.sm),
+                      const SizedBox(height: 8),
                       Text(
                         'Agrega tu primer gasto tocando el botón +',
                         style: TextStyle(fontSize: 14, color: Colors.grey[500]),
@@ -439,19 +529,33 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                   .take(3)
                   .map(
                     (expense) => Card(
-                      margin: const EdgeInsets.only(bottom: AppSpacing.sm),
+                      elevation: 1,
+                      margin: const EdgeInsets.only(bottom: 8),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
                       child: ListTile(
+                        contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 8,
+                        ),
                         leading: CircleAvatar(
-                          backgroundColor: AppTheme.primaryColor.withOpacity(
-                            0.1,
-                          ),
+                          backgroundColor: const Color(
+                            0xFF2196F3,
+                          ).withOpacity(0.1),
                           child: const Icon(
                             Icons.receipt,
-                            color: AppTheme.primaryColor,
+                            color: Color(0xFF2196F3),
                           ),
                         ),
-                        title: Text(expense.formattedDescription),
-                        subtitle: Text(expense.formattedDate),
+                        title: Text(
+                          expense.formattedDescription,
+                          style: const TextStyle(fontWeight: FontWeight.w500),
+                        ),
+                        subtitle: Text(
+                          expense.formattedDate,
+                          style: TextStyle(color: Colors.grey[600]),
+                        ),
                         trailing: Text(
                           expense.formattedAmount(
                             ref.watch(currentUserProvider)!.currency,
@@ -459,7 +563,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                           style: const TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.w600,
-                            color: AppTheme.errorColor,
+                            color: Color(0xFFE53935),
                           ),
                         ),
                       ),
@@ -488,11 +592,18 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text('Estadísticas Rápidas', style: AppTextStyles.h3),
-            const SizedBox(height: AppSpacing.md),
+            const Text(
+              'Estadísticas Rápidas',
+              style: TextStyle(fontSize: 20, fontWeight: FontWeight.w600),
+            ),
+            const SizedBox(height: 16),
             Card(
+              elevation: 2,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
               child: Padding(
-                padding: const EdgeInsets.all(AppSpacing.lg),
+                padding: const EdgeInsets.all(24),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceAround,
                   children: [
@@ -530,14 +641,14 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
   }) {
     return Column(
       children: [
-        Icon(icon, size: 24, color: AppTheme.primaryColor),
-        const SizedBox(height: AppSpacing.xs),
+        Icon(icon, size: 24, color: const Color(0xFF2196F3)),
+        const SizedBox(height: 8),
         Text(
           value,
           style: TextStyle(
             fontSize: isAmount ? 14 : 18,
             fontWeight: FontWeight.bold,
-            color: AppTheme.textPrimary,
+            color: const Color(0xFF212121),
           ),
         ),
         Text(
@@ -554,15 +665,15 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
       case 'BOB':
         return 'Bs. ${amount.toStringAsFixed(2)}';
       case 'USD':
-        return '\$${amount.toStringAsFixed(2)}';
+        return '\${amount.toStringAsFixed(2)}';
       case 'EUR':
         return '€${amount.toStringAsFixed(2)}';
       case 'ARS':
-        return '\$${amount.toStringAsFixed(2)} ARS';
+        return '\${amount.toStringAsFixed(2)} ARS';
       case 'BRL':
-        return 'R\$${amount.toStringAsFixed(2)}';
+        return 'R\${amount.toStringAsFixed(2)}';
       case 'CLP':
-        return '\$${amount.toStringAsFixed(2)} CLP';
+        return '\${amount.toStringAsFixed(2)} CLP';
       default:
         return '${amount.toStringAsFixed(2)} $currency';
     }

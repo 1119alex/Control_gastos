@@ -15,6 +15,7 @@ class CameraService {
   Future<bool> checkCameraPermission() async {
     try {
       final status = await Permission.camera.status;
+      print('📷 Estado del permiso de cámara: $status');
       return status.isGranted;
     } catch (e) {
       print('❌ Error verificando permisos de cámara: $e');
@@ -26,6 +27,7 @@ class CameraService {
   Future<bool> requestCameraPermission() async {
     try {
       final status = await Permission.camera.request();
+      print('📷 Permiso de cámara solicitado: $status');
 
       if (status.isGranted) {
         print('✅ Permiso de cámara concedido');
@@ -48,19 +50,19 @@ class CameraService {
   // Verificar permisos de almacenamiento
   Future<bool> checkStoragePermission() async {
     try {
-      // En Android 10+ (API 29+) no se necesita permiso para app-specific storage
       if (Platform.isAndroid) {
-        final status = await Permission.storage.status;
-        return status.isGranted || status.isLimited;
+        // Para Android, no necesitamos permisos especiales para app-specific storage
+        print('📱 Android detectado - usando almacenamiento interno de la app');
+        return true; // <-- Esta línea DEBE estar aquí
       } else if (Platform.isIOS) {
-        // iOS maneja los permisos automáticamente para app-specific storage
-        return true;
+        final status = await Permission.photos.status;
+        print('📸 Estado del permiso de fotos iOS: $status');
+        return status.isGranted || status.isLimited;
       }
-
       return true;
     } catch (e) {
       print('❌ Error verificando permisos de almacenamiento: $e');
-      return false;
+      return true; // Para almacenamiento interno, no necesitamos permisos
     }
   }
 
@@ -68,14 +70,20 @@ class CameraService {
   Future<bool> requestStoragePermission() async {
     try {
       if (Platform.isAndroid) {
-        final status = await Permission.storage.request();
+        // En Android moderno, no necesitamos permisos para app-specific storage
+        print(
+          '📱 Android - no se requieren permisos adicionales para almacenamiento interno',
+        );
+        return true;
+      } else if (Platform.isIOS) {
+        final status = await Permission.photos.request();
+        print('📸 Permiso de fotos iOS solicitado: $status');
         return status.isGranted || status.isLimited;
       }
-
-      return true; // iOS no necesita solicitud explícita
+      return true;
     } catch (e) {
       print('❌ Error solicitando permisos de almacenamiento: $e');
-      return false;
+      return true; // Para almacenamiento interno, no necesitamos permisos
     }
   }
 
@@ -83,16 +91,25 @@ class CameraService {
   Future<bool> checkAllPermissions() async {
     final cameraPermission = await checkCameraPermission();
     final storagePermission = await checkStoragePermission();
-
-    return cameraPermission && storagePermission;
+    final result = cameraPermission && storagePermission;
+    print(
+      '🔍 Verificación de permisos: cámara=$cameraPermission, almacenamiento=$storagePermission, resultado=$result',
+    );
+    return result;
   }
 
   // Solicitar todos los permisos necesarios
   Future<bool> requestAllPermissions() async {
+    print('🔄 Solicitando todos los permisos...');
+
     final cameraPermission = await requestCameraPermission();
     final storagePermission = await requestStoragePermission();
+    final result = cameraPermission && storagePermission;
 
-    return cameraPermission && storagePermission;
+    print(
+      '✅ Resultado de permisos: cámara=$cameraPermission, almacenamiento=$storagePermission, resultado=$result',
+    );
+    return result;
   }
 
   // =============================================
@@ -105,15 +122,23 @@ class CameraService {
     double? maxWidth,
     double? maxHeight,
   }) async {
+    print('📷 Iniciando captura desde cámara...');
+
     try {
-      // Verificar permisos
-      if (!await checkAllPermissions()) {
-        final granted = await requestAllPermissions();
-        if (!granted) {
+      // Verificar y solicitar permisos si es necesario
+      bool hasPermissions = await checkAllPermissions();
+      if (!hasPermissions) {
+        print('⚠️ No hay permisos, solicitando...');
+        hasPermissions = await requestAllPermissions();
+        if (!hasPermissions) {
+          print('❌ Permisos denegados');
           return CameraResult.error('Permisos de cámara no concedidos');
         }
       }
 
+      print('✅ Permisos verificados, abriendo cámara...');
+
+      // Intentar capturar la imagen
       final XFile? photo = await _picker.pickImage(
         source: ImageSource.camera,
         imageQuality: imageQuality,
@@ -123,9 +148,13 @@ class CameraService {
       );
 
       if (photo != null) {
+        print('📸 Foto capturada: ${photo.path}');
+
         // Guardar imagen en directorio de la app
         final savedPath = await _saveImageToAppDirectory(photo);
         if (savedPath != null) {
+          print('💾 Imagen guardada en: $savedPath');
+
           // Obtener información del archivo
           final file = File(savedPath);
           final fileSize = await file.length();
@@ -136,13 +165,15 @@ class CameraService {
             fileSize: fileSize,
           );
         } else {
+          print('❌ Error al guardar la imagen');
           return CameraResult.error('Error al guardar la imagen');
         }
       } else {
+        print('⚠️ Captura cancelada por el usuario');
         return CameraResult.cancelled('Captura cancelada por el usuario');
       }
     } catch (e) {
-      print('❌ Error capturando desde cámara: $e');
+      print('❌ Error en captura desde cámara: $e');
       return CameraResult.error('Error al capturar imagen: $e');
     }
   }
@@ -153,7 +184,22 @@ class CameraService {
     double? maxWidth,
     double? maxHeight,
   }) async {
+    print('📸 Iniciando selección desde galería...');
+
     try {
+      // Verificar y solicitar permisos si es necesario
+      bool hasPermissions = await checkStoragePermission();
+      if (!hasPermissions) {
+        print('⚠️ No hay permisos de almacenamiento, solicitando...');
+        hasPermissions = await requestStoragePermission();
+        if (!hasPermissions) {
+          print('❌ Permisos de almacenamiento denegados');
+          return CameraResult.error('Permisos de almacenamiento no concedidos');
+        }
+      }
+
+      print('✅ Permisos de almacenamiento verificados, abriendo galería...');
+
       final XFile? photo = await _picker.pickImage(
         source: ImageSource.gallery,
         imageQuality: imageQuality,
@@ -162,9 +208,13 @@ class CameraService {
       );
 
       if (photo != null) {
+        print('📸 Imagen seleccionada: ${photo.path}');
+
         // Guardar imagen en directorio de la app
         final savedPath = await _saveImageToAppDirectory(photo);
         if (savedPath != null) {
+          print('💾 Imagen guardada en: $savedPath');
+
           // Obtener información del archivo
           final file = File(savedPath);
           final fileSize = await file.length();
@@ -175,9 +225,11 @@ class CameraService {
             fileSize: fileSize,
           );
         } else {
+          print('❌ Error al guardar la imagen');
           return CameraResult.error('Error al guardar la imagen');
         }
       } else {
+        print('⚠️ Selección cancelada por el usuario');
         return CameraResult.cancelled('Selección cancelada por el usuario');
       }
     } catch (e) {
@@ -193,6 +245,8 @@ class CameraService {
   // Guardar imagen en directorio de la aplicación
   Future<String?> _saveImageToAppDirectory(XFile photo) async {
     try {
+      print('💾 Guardando imagen en directorio de la app...');
+
       // Obtener directorio de documentos de la app
       final appDir = await getApplicationDocumentsDirectory();
       final receiptsDir = Directory('${appDir.path}/receipts');
@@ -200,6 +254,7 @@ class CameraService {
       // Crear directorio si no existe
       if (!await receiptsDir.exists()) {
         await receiptsDir.create(recursive: true);
+        print('📁 Directorio de recibos creado: ${receiptsDir.path}');
       }
 
       // Generar nombre único para el archivo
@@ -208,12 +263,23 @@ class CameraService {
       final fileName = 'receipt_$timestamp$extension';
       final savedImagePath = '${receiptsDir.path}/$fileName';
 
+      print('📝 Copiando archivo a: $savedImagePath');
+
       // Copiar archivo al directorio de la app
       final File originalFile = File(photo.path);
       final File savedFile = await originalFile.copy(savedImagePath);
 
-      print('✅ Imagen guardada en: $savedImagePath');
-      return savedFile.path;
+      // Verificar que el archivo se guardó correctamente
+      if (await savedFile.exists()) {
+        final fileSize = await savedFile.length();
+        print(
+          '✅ Imagen guardada exitosamente: $savedImagePath (${fileSize} bytes)',
+        );
+        return savedFile.path;
+      } else {
+        print('❌ El archivo no se guardó correctamente');
+        return null;
+      }
     } catch (e) {
       print('❌ Error guardando imagen: $e');
       return null;
@@ -243,7 +309,7 @@ class CameraService {
       final file = File(imagePath);
       if (await file.exists()) {
         await file.delete();
-        print('✅ Imagen eliminada: $imagePath');
+        print('🗑️ Imagen eliminada: $imagePath');
         return true;
       } else {
         print('⚠️ Archivo no encontrado: $imagePath');
@@ -259,7 +325,9 @@ class CameraService {
   Future<bool> imageExists(String imagePath) async {
     try {
       final file = File(imagePath);
-      return await file.exists();
+      final exists = await file.exists();
+      print('🔍 Verificando imagen $imagePath: existe=$exists');
+      return exists;
     } catch (e) {
       print('❌ Error verificando existencia de imagen: $e');
       return false;
@@ -324,7 +392,7 @@ class CameraService {
           }
         }
 
-        print('✅ Limpieza completada: $deletedCount archivos eliminados');
+        print('🧹 Limpieza completada: $deletedCount archivos eliminados');
       }
     } catch (e) {
       print('❌ Error en limpieza de imágenes: $e');
@@ -370,17 +438,10 @@ class CameraService {
 
     return '${size.toStringAsFixed(i == 0 ? 0 : 1)} ${suffixes[i]}';
   }
-
-  // Mostrar opciones de fuente de imagen (cámara o galería)
-  Future<CameraResult> showImageSourceOptions() async {
-    // Esta función sería llamada desde la UI con un dialog
-    // Por ahora retorna un resultado que indica que debe mostrar opciones
-    return CameraResult.showOptions('Mostrar opciones de fuente');
-  }
 }
 
 // =============================================
-// CLASES DE RESULTADO Y DATOS
+// CLASES DE RESULTADO Y DATOS (SIN CAMBIOS)
 // =============================================
 
 // Resultado de operaciones de cámara
@@ -434,15 +495,6 @@ class CameraResult {
     );
   }
 
-  // Constructor para mostrar opciones
-  factory CameraResult.showOptions(String message) {
-    return CameraResult._(
-      isSuccess: false,
-      errorMessage: message,
-      type: CameraResultType.showOptions,
-    );
-  }
-
   @override
   String toString() {
     if (isSuccess) {
@@ -454,7 +506,7 @@ class CameraResult {
 }
 
 // Tipos de resultado de cámara
-enum CameraResultType { success, error, cancelled, showOptions }
+enum CameraResultType { success, error, cancelled }
 
 // Información de imagen
 class ImageInfo {
@@ -552,54 +604,5 @@ class CameraConfig {
       preferFrontCamera: false,
       enableFlash: false,
     );
-  }
-
-  CameraConfig copyWith({
-    int? imageQuality,
-    double? maxWidth,
-    double? maxHeight,
-    bool? preferFrontCamera,
-    bool? enableFlash,
-  }) {
-    return CameraConfig(
-      imageQuality: imageQuality ?? this.imageQuality,
-      maxWidth: maxWidth ?? this.maxWidth,
-      maxHeight: maxHeight ?? this.maxHeight,
-      preferFrontCamera: preferFrontCamera ?? this.preferFrontCamera,
-      enableFlash: enableFlash ?? this.enableFlash,
-    );
-  }
-}
-
-// Estado de permisos
-class PermissionStatus {
-  final bool cameraGranted;
-  final bool storageGranted;
-  final String? errorMessage;
-
-  const PermissionStatus({
-    required this.cameraGranted,
-    required this.storageGranted,
-    this.errorMessage,
-  });
-
-  bool get allGranted => cameraGranted && storageGranted;
-  bool get hasError => errorMessage != null;
-
-  factory PermissionStatus.allGranted() {
-    return const PermissionStatus(cameraGranted: true, storageGranted: true);
-  }
-
-  factory PermissionStatus.denied(String message) {
-    return PermissionStatus(
-      cameraGranted: false,
-      storageGranted: false,
-      errorMessage: message,
-    );
-  }
-
-  @override
-  String toString() {
-    return 'PermissionStatus(camera: $cameraGranted, storage: $storageGranted, error: $errorMessage)';
   }
 }
